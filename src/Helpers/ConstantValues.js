@@ -1,0 +1,1 @@
+export const WebApiBaseUrl = 'http://www.netdrug.ir';

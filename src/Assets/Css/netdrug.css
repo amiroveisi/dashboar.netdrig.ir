@@ -1,0 +1,17 @@
+@font-face{
+    font-family: IranSans;
+    src: local("IranSan") url('../Fonts/IRANSans.ttf') format("ttf");
+    src: url('../Fonts/IRANSansWeb.woff2') format('woff2')
+}
+.h-100{
+    height: 100%;
+}
+.h-80{
+    height: 80%;
+}
+.h-50{
+    height: 50%;
+}
+h1,h2,h3,h4,h5,h6,p,div,span,label{
+    font-family: IranSans !important;
+}

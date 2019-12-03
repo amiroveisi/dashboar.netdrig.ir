@@ -1,4 +1,4 @@
-import React, { Component, useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Container from '@material-ui/core/Container';
 import { Grid, Paper, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
@@ -10,6 +10,7 @@ import Link from '@material-ui/core/Link';
 import KeyIcon from '@material-ui/icons/VpnKey';
 import * as ConstantValues from '../Helpers/ConstantValues';
 import { Redirect } from 'react-router-dom';
+import { useSnackbar } from 'notistack';
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -39,8 +40,9 @@ export default function Login() {
     const [hasError, setHasError] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-   
-    function handleLogin() {
+    const { enqueueSnackbar } = useSnackbar();
+    const handleLogin = () => {
+        setIsLoading(true);
         fetch(`${ConstantValues.WebApiBaseUrl}/oauth2/token`,
             {
                 method: "POST",
@@ -66,6 +68,7 @@ export default function Login() {
                 else {
                     setHasError(true);
                     setIsLoading(false);
+                    enqueueSnackbar(" نام کاربری یا کلمه عبور صحیح نمی باشد",{variant:'error'});
                 }
             });
 
@@ -73,10 +76,10 @@ export default function Login() {
 
     }
 
-    if(isLoggedIn)
-    {
-        return <Redirect to="/"/>
+    if (isLoggedIn) {
+        return <Redirect to="/" />
     }
+
     return (
 
         <div className={classes.root}>
@@ -127,6 +130,7 @@ export default function Login() {
             </Container>
 
         </div>
+
     );
 
 }

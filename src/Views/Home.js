@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function()
+export default function Home()
 {
     return(
         <h3>داشبورد داروخانه - نت دراگ</h3>

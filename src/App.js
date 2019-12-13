@@ -9,6 +9,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import TopMenu from './Views/TopMenu';
 import { SnackbarProvider } from 'notistack';
 import Home from './Views/Home';
+import DrugStoresIndex from './Views/DrugStore/DrugStoresIndex';
 
 
 const theme = createMuiTheme({
@@ -44,7 +45,9 @@ function App() {
                 <TopMenu/>
                 <Switch>
                   <Route path='/login' component={Login} />
+                  <Route path='/drugstore/all' component={DrugStoresIndex} />
                   <Route path='/' component={Home} />
+                  
                 </Switch>
               </BrowserRouter>
             </body>

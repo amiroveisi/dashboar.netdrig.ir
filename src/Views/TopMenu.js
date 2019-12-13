@@ -6,6 +6,8 @@ import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import { makeStyles } from '@material-ui/core/styles';
 import { Link as RouterLink } from 'react-router-dom';
+import * as AuthHelper from '../Helpers/AuthHelper';
+
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -18,12 +20,23 @@ const useStyles = makeStyles(theme => ({
         flexGrow: 1,
     }
 }));
+
 const Link = React.forwardRef((props, ref) => (
     <RouterLink innerRef={ref} {...props} />
 ));
-export default function () {
-    const classes = useStyles();
 
+export default function TopMenu() {
+    const classes = useStyles();
+    const handleLoginButtonClick = () => {
+        if (AuthHelper.IsLoggedIn()) {
+            AuthHelper.LogOff();
+            document.location.href = '/';
+        }
+        else
+        {
+            document.location.href = '/login';
+        }
+    }
     return (
         <AppBar position="static">
             <Toolbar>
@@ -33,8 +46,14 @@ export default function () {
                 <Button className={classes.menuButton} color="inherit" component={Link} to="/">
                     صفحه اصلی
                 </Button>
-                <Button className={classes.menuButton} color="inherit" component={Link} to="/login">
-                    ورود
+                <Button className={classes.menuButton} color="inherit" component={Link} to="/drugstore/all">
+                    مدیریت داروخانه ها
+                </Button>
+                <Button className={classes.menuButton} color="inherit" component={Link} to={AuthHelper.IsLoggedIn() ? '/' : '/login'}
+                    onClick={() => {
+                        handleLoginButtonClick();
+                    }}>
+                    {AuthHelper.IsLoggedIn() ? "خروج" : "ورود"}
                 </Button>
             </Toolbar>
         </AppBar>

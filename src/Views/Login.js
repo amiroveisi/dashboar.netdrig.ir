@@ -9,9 +9,9 @@ import Button from '@material-ui/core/Button';
 import Link from '@material-ui/core/Link';
 import KeyIcon from '@material-ui/icons/VpnKey';
 import * as ConstantValues from '../Helpers/ConstantValues';
-import { Redirect } from 'react-router-dom';
-import { useSnackbar } from 'notistack';
 
+import { useSnackbar } from 'notistack';
+import * as AuthHelper from '../Helpers/AuthHelper';
 const useStyles = makeStyles(theme => ({
     root: {
         flexGrow: 1,
@@ -37,47 +37,54 @@ export default function Login() {
     const classes = useStyles();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [hasError, setHasError] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const { enqueueSnackbar } = useSnackbar();
-    const handleLogin = () => {
+    const handleLogin = async () => {
         setIsLoading(true);
-        fetch(`${ConstantValues.WebApiBaseUrl}/oauth2/token`,
-            {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'Username=' + username + '&Password=' + password + '&grant_type=password'
+        try {
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/oauth2/token`,
+                {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'Username=' + username + '&Password=' + password + '&grant_type=password'
 
-            }).then(response => {
+                });
+            if (!response) {
+                setIsLoading(false);
+                enqueueSnackbar(`خطایی رخ داده است. ${response.status} ${response.statusText}`, { variant: 'error' });
+            }
+            else {
                 try {
-                    return response.json();
-                } catch (ex) {
-                    Promise.reject({ exception: ex, body: response, type: 'unparsable' });
-                    setHasError(true);
+                    const data = await response.json();
+                    if (data && data.access_token) {
+                        AuthHelper.LoggedIn(data.access_token);
+                        setIsLoading(false);
+                        setIsLoggedIn(true);
+                    }
+                    else {
+                        setIsLoading(false);
+                        enqueueSnackbar(" نام کاربری یا کلمه عبور صحیح نمی باشد", { variant: 'error' });
+                    }
+                } catch (error) {
                     setIsLoading(false);
+                    enqueueSnackbar("خطا در دریافت اطلاعات از سرور", { variant: 'error' });
                 }
-            }).then(data => {
-                if (data.access_token) {
-                    sessionStorage.setItem('token', data.access_token);
-                    setIsLoading(false);
-                    setIsLoggedIn(true);
-                }
-                else {
-                    setHasError(true);
-                    setIsLoading(false);
-                    enqueueSnackbar(" نام کاربری یا کلمه عبور صحیح نمی باشد",{variant:'error'});
-                }
-            });
+            }
 
-
-
+        } catch (error) {
+            console.log(error);
+            if (error == 'TypeError: Failed to fetch') {
+                setIsLoading(false);
+                enqueueSnackbar('خطا در برقراری ارتباط با سرور. لطفا ارتباط اینترنتی خود را بررسی کنید', { variant: 'error' });
+            }
+        }
     }
-
+   
     if (isLoggedIn) {
-        return <Redirect to="/" />
+        document.location.href = '/';
     }
 
     return (

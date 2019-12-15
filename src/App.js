@@ -11,6 +11,7 @@ import { SnackbarProvider } from 'notistack';
 import Home from './Views/Home';
 import DrugStoresIndex from './Views/DrugStore/DrugStoresIndex';
 import NewDrugStore from './Views/DrugStore/NewDrugStore';
+import EditDrugStore from './Views/DrugStore/EditDrugStore';
 
 
 const theme = createMuiTheme({
@@ -48,6 +49,7 @@ function App() {
                   <Route path='/login' component={Login} />
                   <Route path='/drugstore/all' component={DrugStoresIndex} />
                   <Route path='/drugstore/new' component={NewDrugStore} />
+                  <Route path='/drugstore/edit/:drugStoreId' component={EditDrugStore} />
                   <Route path='/' component={Home} />
                   
                 </Switch>

@@ -68,7 +68,8 @@ export default function DrugStoresIndex() {
                             viewModel.push({
                                 Image: null,
                                 Title: item.Name,
-                                Address: item.Address
+                                Address: item.Address,
+                                Id : item.Id
                             });
                         });
                         setData(viewModel);

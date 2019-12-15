@@ -12,6 +12,7 @@ import EditIcon from '@material-ui/icons/Edit';
 import { Link as RouterLink } from 'react-router-dom';
 import Skeleton from '@material-ui/lab/Skeleton';
 import IconButton from '@material-ui/core/IconButton';
+import {pink} from '@material-ui/core/colors'
 
 const Link = React.forwardRef((props, ref) => (
     <RouterLink innerRef={ref} {...props} />
@@ -42,8 +43,8 @@ export default function GeneralList(props) {
                 props.data.map(item => (
                     <ListItem>
                         <ListItemAvatar>
-                            <Avatar>
-                                {item.Image ? <img src={item.Image} /> : <PharmacyIcon />}
+                            <Avatar style={{backgroundColor: pink[300]}}>
+                                {item.Image ? <img src={item.Image} /> : <PharmacyIcon  />}
                             </Avatar>
                         </ListItemAvatar>
                         <ListItemText

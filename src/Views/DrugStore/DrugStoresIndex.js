@@ -9,22 +9,8 @@ import * as AuthHelper from '../../Helpers/AuthHelper';
 import { Redirect } from 'react-router-dom';
 import Button from '@material-ui/core/Button';
 import Add from '@material-ui/icons/Add';
+import { Link as RouterLink } from 'react-router-dom';
 
-const sampleData = [{
-    Image: null,
-    Title: 'title 1',
-    Address: 'address 1'
-},
-{
-    Image: null,
-    Title: 'title 2',
-    Address: 'address 2'
-},
-{
-    Image: null,
-    Title: 'title 3',
-    Address: 'address 3'
-}];
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -36,6 +22,9 @@ const useStyles = makeStyles(theme => ({
         padding: theme.spacing(2)
     }
 }));
+const Link = React.forwardRef((props, ref) => (
+    <RouterLink innerRef={ref} {...props} />
+));
 export default function DrugStoresIndex() {
     const [data, setData] = useState(null);
     const [hasError, setHasError] = useState(false);
@@ -109,14 +98,21 @@ export default function DrugStoresIndex() {
         );
     }
     if (dataIsEmpty) {
-        return ({ noDataView });
+        return ( <div className={classes.root}>{ noDataView }</div>);
     }
     return (
         <div className={classes.root}>
             <Container className="h-100" >
-                <Grid className={classes.grid} direction="column" container xs={12} justify="center" alignItems="stretch" >
-                    <Grid item alignItems="flex-end">
-                        <Button color="primary" startIcon={<Add/>}>داروخانه جدید</Button>
+                <Grid container className={classes.grid} style={{marginTop:'30px'}} direction="column" xs={12} justify="center" alignItems="stretch" >
+                <Grid item xs={12}>
+                        <Typography component="h3">
+                            لیست داروخانه ها
+                        </Typography>
+                    </Grid>
+                    <Grid container justify="flex-end">
+                        <Grid item>
+                            <Button color="primary" variant='outlined' startIcon={<Add />} component={Link} to="/drugstore/new">داروخانه جدید</Button>
+                        </Grid>
                     </Grid>
                     <Grid item>
                         <DrugStoreList data={data} />

@@ -16,6 +16,7 @@ import Edit from '@material-ui/icons/Edit';
 import Clear from '@material-ui/icons/Clear';
 import IconButton from '@material-ui/core/IconButton';
 import { Redirect } from 'react-router-dom';
+import Skeleton from '@material-ui/lab/Skeleton';
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -33,7 +34,7 @@ const Link = React.forwardRef((props, ref) => (
 ));
 export default function EditDrugStore(props) {
     const classes = useStyles();
-    const [drugStore, setDrugStore] = useState(DrugStoreModel);
+    const [drugStore, setDrugStore] = useState(null);
     const [success, setSuccess] = useState(null);
     const [unauthorized, setUnauthorized] = useState(false);
     const [loadError, setLoadError] = useState('');
@@ -41,7 +42,7 @@ export default function EditDrugStore(props) {
     useEffect(() => {
         const abortController = new AbortController();
         const abortSignal = abortController.signal;
-       
+
         const drugStoreId = props.match.params.drugStoreId;
         console.log(drugStoreId);
         loadDrugStore(drugStoreId, abortSignal);
@@ -65,8 +66,8 @@ export default function EditDrugStore(props) {
                         PhoneNumber: drugStore.PhoneNumber,
                         Description: drugStore.Description,
                         OwnerFullName: drugStore.OwnerFullName,
-                        Id : drugStore.Id,
-                        ApplicationUserId : drugStore.ApplicationUserId
+                        Id: drugStore.Id,
+                        ApplicationUserId: drugStore.ApplicationUserId
                     })
                 });
             if (!response) {
@@ -102,8 +103,7 @@ export default function EditDrugStore(props) {
     }
     const loadDrugStore = async function (drugStoreId, cancellationToken) {
         try {
-            if(!drugStoreId)
-            {
+            if (!drugStoreId) {
                 setLoadError('not found');
                 return;
             }
@@ -130,7 +130,7 @@ export default function EditDrugStore(props) {
                         setDrugStore(serverData.Data);
                     }
                     else {
-                        enqueueSnackbar("خطا در دریافت اطلاعات داروخانه. لطفا صفحه را مجددا بارگذاری نمایید", {variant:'warning'});
+                        enqueueSnackbar("خطا در دریافت اطلاعات داروخانه. لطفا صفحه را مجددا بارگذاری نمایید", { variant: 'warning' });
                     }
 
                 } catch (error) {
@@ -146,13 +146,44 @@ export default function EditDrugStore(props) {
         }
     }
 
-       if (unauthorized) {
+    if (unauthorized) {
         return (
             <Redirect to="/login" />
         );
     }
     if (success) {
         return (<Redirect to='/drugstore/all' />);
+    }
+    if (!drugStore) {
+        return (
+            <div className={classes.root}>
+                <Container className="h-100" >
+                    <Grid container style={{ marginTop: '30px' }}>
+                        <Grid item xs={12} style={{marginBottom:'30px'}}>
+                            <Typography component="h3">
+                                ویرایش داروخانه
+                        </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Skeleton variant="text" width={'80%'} height={30} style={{ marginTop: '30px' }} />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Skeleton variant="text" width={'80%'} height={30} style={{ marginTop: '30px' }}/>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Skeleton variant="text" width={'80%'} height={30} style={{ marginTop: '30px' }}/>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Skeleton variant="text" width={'80%'} height={30} style={{ marginTop: '30px' }}/>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Skeleton variant="text" width={'80%'} height={30} style={{ marginTop: '30px' }}/>
+                        </Grid>
+
+                    </Grid>
+                </Container>
+            </div>
+        );
     }
     return (
         <div className={classes.root}>
@@ -247,7 +278,7 @@ export default function EditDrugStore(props) {
                         </FormControl>
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                       
+
                     </Grid>
                     <Grid container direction="row" xs={12} justify="flex-end" spacing={2}>
                         <Grid item>

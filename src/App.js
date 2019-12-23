@@ -12,6 +12,9 @@ import Home from './Views/Home';
 import DrugStoresIndex from './Views/DrugStore/DrugStoresIndex';
 import NewDrugStore from './Views/DrugStore/NewDrugStore';
 import EditDrugStore from './Views/DrugStore/EditDrugStore';
+import Dashboard from './Views/Dashboard/Dashboard';
+import AuthHandler from './Components/AuthHandler';
+import OrderDetails from './Views/Order/OrderDetails';
 
 
 const theme = createMuiTheme({
@@ -35,27 +38,25 @@ function App() {
     <RTL>
       <ThemeProvider theme={theme}>
         <SnackbarProvider>
-          <div className="App">
-            <body>
-              {/* <BrowserRouter>
-                <Switch>
-                  <Route exact path='/' component={Home} />
-                  <Route path='/login' component={Login} />
-                  <Route path='/drug/details/:drugId' component={DrugDetails} />
-                </Switch></BrowserRouter> */}
-              <BrowserRouter>
-                <TopMenu/>
-                <Switch>
-                  <Route path='/login' component={Login} />
-                  <Route path='/drugstore/all' component={DrugStoresIndex} />
-                  <Route path='/drugstore/new' component={NewDrugStore} />
-                  <Route path='/drugstore/edit/:drugStoreId' component={EditDrugStore} />
-                  <Route path='/' component={Home} />
-                  
-                </Switch>
-              </BrowserRouter>
-            </body>
-          </div>
+            <div className="App">
+              <body>
+                <BrowserRouter>
+                  <TopMenu />
+                  <Switch>
+                  <Route path='/orders/:orderId/details' component={OrderDetails} />
+                    <Route path='/dashboard' component={Dashboard} />
+                    <Route path='/login' component={Login} />
+                    <Route path='/drugstore/all' component={DrugStoresIndex} />
+                    <Route path='/drugstore/new' component={NewDrugStore} />
+                    <Route path='/drugstore/edit/:drugStoreId' component={EditDrugStore} />
+                    
+                    <Route path='/' component={Home} />
+
+
+                  </Switch>
+                </BrowserRouter>
+              </body>
+            </div>
         </SnackbarProvider>
       </ThemeProvider>
     </RTL>

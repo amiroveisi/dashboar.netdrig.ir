@@ -12,6 +12,6 @@
 .h-50{
     height: 50%;
 }
-h1,h2,h3,h4,h5,h6,p,div,span,label{
+h1,h2,h3,h4,h5,h6,p,div,span,label,th,tr,td{
     font-family: IranSans !important;
 }

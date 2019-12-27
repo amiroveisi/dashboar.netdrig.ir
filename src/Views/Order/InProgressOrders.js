@@ -13,7 +13,7 @@ import CheckRoundedIcon from '@material-ui/icons/CheckRounded';
 import LocalOfferIcon from '@material-ui/icons/LocalOffer';
 import CloseIcon from '@material-ui/icons/Close';
 import DetailsRoundedIcon from '@material-ui/icons/DetailsRounded';
-
+import LocalMallRoundedIcon from '@material-ui/icons/LocalMallRounded';
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -28,7 +28,7 @@ const Link = React.forwardRef((props, ref) => (
     <RouterLink innerRef={ref} {...props} />
 ));
 
-export default function ReadytoAcceptOrders() {
+export default function InProgressOrders() {
     const [orders, setOrders] = useState(null);
     const { enqueueSnackbar } = useSnackbar();
     const [unauthorized, setUnauthorized] = useState(false);
@@ -43,7 +43,7 @@ export default function ReadytoAcceptOrders() {
     const loadOrders = async function (cancellationToken) {
         try {
 
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/orders/readyToAccept`,
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/orders/inprogress`,
                 {
                     method: "GET",
                     headers: {
@@ -90,13 +90,13 @@ export default function ReadytoAcceptOrders() {
 
     return (
         <SimpleList data={orders}
-            primaryText={(order) => `${order.Address && order.Address.AddressText || 'بدون آدرس'} - ${order.CustomerFullName || '(بدون نام)'}`}
-            secondaryText={(order) => `${order.Address && order.Address.PhoneNumber || 'بدون شماره تلفن'} - #${order.Code || '0000'}`}
+            primaryText={(order) => `${order.Address.AddressText || 'بدون آدرس'} - ${order.CustomerFullName || '(بدون نام)'}`}
+            secondaryText={(order) => `${order.Address.PhoneNumber || 'بدون شماره تلفن'} - #${order.Code || '0000'}`}
             actions={[
                 {
-                    label: 'پذیرش سفارش',
+                    label: 'شروع آماده سازی',
                     link: function (order) { return `/orders/${order.Id}/confirm` },
-                    icon: <CheckRoundedIcon />,
+                    icon: <LocalMallRoundedIcon />,
                     color: 'primary'
                 },
                 {

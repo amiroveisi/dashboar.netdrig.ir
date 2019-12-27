@@ -12,6 +12,7 @@ import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import TabPanel from '../../Components/TabPanel';
 import ReadytoAcceptOrders from '../Order/ReadyToAcceptOrders';
+import InProgressOrders from '../Order/InProgressOrders';
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -47,7 +48,7 @@ export default function Dashboard() {
                        <ReadytoAcceptOrders/>
                     </TabPanel>
                     <TabPanel value={value} index={1}>
-                        Item 2
+                        <InProgressOrders/>
             </TabPanel>
                     <TabPanel value={value} index={2}>
                         Item 3

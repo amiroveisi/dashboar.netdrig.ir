@@ -50,7 +50,7 @@ function App() {
                     <Route path='/drugstore/new' component={NewDrugStore} />
                     <Route path='/drugstore/edit/:drugStoreId' component={EditDrugStore} />
                     
-                    <Route path='/' component={Home} />
+                    <Route path='/' component={Dashboard} />
 
 
                   </Switch>

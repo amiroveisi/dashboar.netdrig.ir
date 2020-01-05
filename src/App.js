@@ -15,6 +15,8 @@ import EditDrugStore from './Views/DrugStore/EditDrugStore';
 import Dashboard from './Views/Dashboard/Dashboard';
 import AuthHandler from './Components/AuthHandler';
 import OrderDetails from './Views/Order/OrderDetails';
+import VirtualizedListTest from './Views/VirtualizedListTest';
+import TableTest from './Views/TableTest';
 
 
 const theme = createMuiTheme({
@@ -43,7 +45,9 @@ function App() {
                 <BrowserRouter>
                   <TopMenu />
                   <Switch>
+                  <Route path='/test' component={TableTest} />
                   <Route path='/orders/:orderId/details' component={OrderDetails} />
+                  
                     <Route path='/dashboard' component={Dashboard} />
                     <Route path='/login' component={Login} />
                     <Route path='/drugstore/all' component={DrugStoresIndex} />

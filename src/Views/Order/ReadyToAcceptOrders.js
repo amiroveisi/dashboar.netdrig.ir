@@ -93,18 +93,18 @@ export default function ReadytoAcceptOrders() {
             primaryText={(order) => `${order.Address && order.Address.AddressText || 'بدون آدرس'} - ${order.CustomerFullName || '(بدون نام)'}`}
             secondaryText={(order) => `${order.Address && order.Address.PhoneNumber || 'بدون شماره تلفن'} - #${order.Code || '0000'}`}
             actions={[
-                {
-                    label: 'پذیرش سفارش',
-                    link: function (order) { return `/orders/${order.Id}/confirm` },
-                    icon: <CheckRoundedIcon />,
-                    color: 'primary'
-                },
-                {
-                    label: 'رد سفارش',
-                    link: function (order) { return `/orders/${order.Id}/decline` },
-                    icon: <CloseIcon />,
-                    color: 'secondary'
-                },
+                // {
+                //     label: 'پذیرش سفارش',
+                //     link: function (order) { return `/orders/${order.Id}/confirm` },
+                //     icon: <CheckRoundedIcon />,
+                //     color: 'primary',
+                // },
+                // {
+                //     label: 'رد سفارش',
+                //     link: function (order) { return `/orders/${order.Id}/decline` },
+                //     icon: <CloseIcon />,
+                //     color: 'secondary'
+                // },
                 {
                     label: 'جزئیات سفارش',
                     link: function (order) { return `/orders/${order.Id}/details` },

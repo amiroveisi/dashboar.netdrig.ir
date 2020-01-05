@@ -28,9 +28,10 @@ const Link = React.forwardRef((props, ref) => (
     <RouterLink innerRef={ref} {...props} />
 ));
 
-export default function InProgressOrders() {
+export default function AcceptedOrders() {
     const [orders, setOrders] = useState(null);
     const { enqueueSnackbar } = useSnackbar();
+    const [noData, setNoData] = useState(false);
     const [unauthorized, setUnauthorized] = useState(false);
     useEffect(() => {
         const abortController = new AbortController();
@@ -43,7 +44,7 @@ export default function InProgressOrders() {
     const loadOrders = async function (cancellationToken) {
         try {
 
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/orders/inprogress`,
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/orders/accepted`,
                 {
                     method: "GET",
                     headers: {
@@ -65,6 +66,8 @@ export default function InProgressOrders() {
                     if (serverData && serverData.Data && serverData.Code === '0') {
                         setOrders(serverData.Data);
                     }
+                    else if (serverData && serverData.Code === '1005') //no drugstore found for this user
+                        setNoData(true);
                     else {
                         enqueueSnackbar("خطا در دریافت اطلاعات داروخانه. لطفا صفحه را مجددا بارگذاری نمایید", { variant: 'warning' });
                     }
@@ -81,34 +84,38 @@ export default function InProgressOrders() {
             }
         }
     }
+   
+    
 
     if (unauthorized) {
         return (
             <Redirect to="/login" />
         );
     }
-
+    if (noData) {
+        return (<h6>اطلاعاتی برای نمایش وجود ندارد</h6>);
+    }
     return (
         <SimpleList data={orders}
             primaryText={(order) => `${order.Address.AddressText || 'بدون آدرس'} - ${order.CustomerFullName || '(بدون نام)'}`}
             secondaryText={(order) => `${order.Address.PhoneNumber || 'بدون شماره تلفن'} - #${order.Code || '0000'}`}
             actions={[
-                {
-                    label: 'شروع آماده سازی',
-                    link: function (order) { return `/orders/${order.Id}/confirm` },
-                    icon: <LocalMallRoundedIcon />,
-                    color: 'primary'
-                },
-                {
-                    label: 'رد سفارش',
-                    link: function (order) { return `/orders/${order.Id}/decline` },
-                    icon: <CloseIcon />,
-                    color: 'secondary'
-                },
+                // {
+                //     label: 'شروع آماده سازی',
+                //     link: function (order) { return `/orders/${order.Id}/confirm` },
+                //     icon: <LocalMallRoundedIcon />,
+                //     color: 'primary'
+                // },
+                // {
+                //     label: 'رد سفارش',
+                //     link: function (order) { return `/orders/${order.Id}/decline` },
+                //     icon: <CloseIcon />,
+                //     color: 'secondary'
+                // },
                 {
                     label: 'جزئیات سفارش',
                     link: function (order) { return `/orders/${order.Id}/details` },
-                    icon: <DetailsRoundedIcon />,
+                    icon: <DetailsRoundedIcon />
                 }
             ]}
 

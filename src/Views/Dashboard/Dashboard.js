@@ -12,7 +12,7 @@ import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import TabPanel from '../../Components/TabPanel';
 import ReadytoAcceptOrders from '../Order/ReadyToAcceptOrders';
-import InProgressOrders from '../Order/InProgressOrders';
+import InProgressOrders from '../Order/AcceptedOrders';
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -41,8 +41,9 @@ export default function Dashboard() {
                 <Grid item xs={12}>
                     <Tabs value={value} onChange={handleChange} >
                         <Tab label="سفارش های قابل پذیرش" />
-                        <Tab label="سفارش های در حال انجام" />
-                        <Tab label="سفارش های انجام شده" />
+                        <Tab label="سفارش های پذیرفته شده" />
+                        <Tab label="سفارش های در حال آماده سازی" />
+                        <Tab label="سفارش های ارسال شده"/>
                     </Tabs>
                     <TabPanel value={value} index={0}>
                        <ReadytoAcceptOrders/>

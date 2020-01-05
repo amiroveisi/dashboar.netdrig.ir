@@ -1,1 +1,6 @@
-export const Confirmed = 9;
+export default function OrderStatuses(){
+    return {
+        Confirmed : 'تایید شده توسط داروخانه',
+        WaitingToBeAcceptedByDrugStore : 'در انتطار تایید توسط داروخانه'
+    }
+} 

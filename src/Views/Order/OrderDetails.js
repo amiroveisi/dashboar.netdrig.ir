@@ -15,12 +15,13 @@ import { grey } from '@material-ui/core/colors';
 import InfoCard from '../../Components/InfoCard';
 import LocationOnRoundedIcon from '@material-ui/icons/LocationOnRounded';
 import PersonRoundedIcon from '@material-ui/icons/PersonRounded';
+import AssignmentRoundedIcon from '@material-ui/icons/AssignmentRounded';
 import noImage from '../../Assets/Images/no-image.jpg';
 import Divider from '@material-ui/core/Divider';
 import { useSnackbar } from 'notistack';
 import * as ConstantValues from '../../Helpers/ConstantValues';
 import * as AuthHelper from '../../Helpers/AuthHelper';
-import * as OrderStatus from '../../Helpers/OrderStatus';
+import OrderStatuses from '../../Helpers/OrderStatus';
 import { Redirect } from 'react-router-dom';
 import { Link as RouterLink } from 'react-router-dom';
 
@@ -38,6 +39,7 @@ const Link = React.forwardRef((props, ref) => (
     <RouterLink innerRef={ref} {...props} />
 ));
 export default function OrderDetails(props) {
+    console.log(OrderStatuses().Confirmed);
     const classes = useStyles();
     const [order, setOrder] = useState(null);
     const { enqueueSnackbar } = useSnackbar();
@@ -104,7 +106,7 @@ export default function OrderDetails(props) {
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'Authorization': `Bearer ${AuthHelper.GetAuthToken()}`
                     },
-                   
+
                 });
             if (!response) {
                 enqueueSnackbar(`خطایی رخ داده است. ${response.status} ${response.statusText}`, { variant: 'error' });
@@ -119,9 +121,10 @@ export default function OrderDetails(props) {
                     const serverData = await response.json();
                     if (serverData && serverData.Data && serverData.Code === '0') {
                         setOrderConfirmed(true);
+                        setOrder(serverData.Data);
                     }
                     else {
-                        enqueueSnackbar("خطا در دریافت اطلاعات داروخانه. لطفا صفحه را مجددا بارگذاری نمایید", { variant: 'warning' });
+                        enqueueSnackbar("خطا در دریافت اطلاعات سفارش. لطفا صفحه را مجددا بارگذاری نمایید", { variant: 'warning' });
                     }
 
                 } catch (error) {
@@ -136,17 +139,59 @@ export default function OrderDetails(props) {
             }
         }
     }
+    const cancelOrder = async function () {
+        try {
+            let orderId = order.Id;
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/orders/${orderId}/cancel`,
+                {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Bearer ${AuthHelper.GetAuthToken()}`
+                    },
+
+                });
+            if (!response) {
+                enqueueSnackbar(`خطایی رخ داده است. ${response.status} ${response.statusText}`, { variant: 'error' });
+            }
+            else if (response.status === 401) {
+                setUnauthorized(true);
+                enqueueSnackbar("شما وارد حساب کاربری خود نشده اید یا دسترسی به این بخش ندارید", { variant: 'error' });
+
+            }
+            else {
+                try {
+                    const serverData = await response.json();
+                    if (serverData && serverData.Data && serverData.Code === '0') {
+                        setOrderConfirmed(true);
+                        setOrder(serverData.Data);
+                    }
+                    else {
+                        enqueueSnackbar("خطا در دریافت اطلاعات سفارش. لطفا صفحه را مجددا بارگذاری نمایید", { variant: 'warning' });
+                    }
+
+                } catch (error) {
+                    enqueueSnackbar("خطا در دریافت اطلاعات از سرور", { variant: 'error' });
+                }
+            }
+
+        } catch (error) {
+            console.log(error);
+            if (error == 'TypeError: Failed to fetch') {
+                enqueueSnackbar('خطا در برقراری ارتباط با سرور. لطفا ارتباط اینترنتی خود را بررسی کنید', { variant: 'error' });
+            }
+        }
+    }
+
     if (unauthorized) {
         return (
             <Redirect to="/login" />
         );
     }
-    if(orderConfirmed)
-    {
-        return (<Redirect to='/dashboard'/>);
-    }
-    if(!order)
-    {
+    // if (orderConfirmed) {
+    //     return (<Redirect to='/dashboard' />);
+    // }
+    if (!order) {
         return (<p>در حال بارگذاری...</p>);
     }
     return (
@@ -176,24 +221,39 @@ export default function OrderDetails(props) {
                             <Divider variant='middle' />
                         </Grid>
                         <Grid item xs={12}>
+                            <InfoCard title='وضعیت سفارش' data={order.LastStatus || 'نامشخص'}
+                                icon={<AssignmentRoundedIcon style={{ color: grey[400] }} />} />
+                            <Divider variant='middle' />
+                        </Grid>
+                        <Grid item xs={12}>
                             <InfoCard title='زمان تقریبی دریافت سفارش' data={order.DeliveryApproximateTime || 'نامشخص'}
                                 icon={<ScheduleIcon style={{ color: grey[400] }} />} />
                             <Divider variant='middle' />
                         </Grid>
                         <Grid item xs={12}>
-                            <InfoCard title='آدرس' data={order.Address.AddressText || 'بدون آدرس'}
+                            <InfoCard title='آدرس' data={order.Address && order.Address.AddressText || 'بدون آدرس'}
                                 icon={<LocationOnRoundedIcon style={{ color: grey[400] }} />} />
                             <Divider variant='middle' />
                         </Grid>
-                        <Grid container item spacing={1} style={{marginTop:'10px'}}>
+                        <Grid container item spacing={1} style={{ marginTop: '10px' }}>
                             <Grid item xs={12}>
-                                <Button disabled={order && order.LastStatus !== OrderStatus.Confirmed} fullWidth variant='contained' onClick={confirmOrder} color='primary'>موجود دارم و سفارش را تایید میکنم</Button>
+                                {order && order.LastStatus === OrderStatuses().WaitingToBeAcceptedByDrugStore &&
+                                    <Button fullWidth variant='contained' onClick={confirmOrder}
+                                        color='primary'>قبول کردن سفارش</Button>}
+                                {order && order.LastStatus === OrderStatuses().Confirmed &&
+                                    <Button fullWidth variant='contained' onClick={confirmOrder}
+                                        color='primary'>شروع آماده سازی سفارش</Button>}
                             </Grid>
                             <Grid item xs={12}>
-                                <Button disabled={order && order.LastStatus !== OrderStatus.Confirmed} fullWidth variant='outlined' color='primary' >موجود ندارم و سفارش را تایید میکنم</Button>
+                               
+                                {order && order.LastStatus === OrderStatuses().Confirmed &&
+                                    <Button fullWidth variant='outlined' onClick={cancelOrder}
+                                        color='secondary'>لغو سفارش</Button>}
                             </Grid>
                             <Grid item xs={12}>
-                                <Button component={Link} to='/dashboard' fullWidth variant='outlined' color='default'>بازگشت به لیست سفارش ها</Button>
+                                <Button component={Link} to='/dashboard'
+                                    fullWidth variant='outlined'
+                                    color='default'>بازگشت به لیست سفارش ها</Button>
                             </Grid>
                         </Grid>
 

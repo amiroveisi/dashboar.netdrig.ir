@@ -16,7 +16,6 @@ import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import LastPageIcon from '@material-ui/icons/LastPage';
 import { TableHead, Checkbox } from '@material-ui/core';
 import Tooltip from '@material-ui/core/Tooltip';
-import { prototype } from 'react-window-infinite-loader';
 
 const useStyles1 = makeStyles(theme => ({
     root: {
@@ -123,9 +122,11 @@ const StyledTableRow = withStyles(theme => ({
     },
 
 }))(TableRow);
+
 export default function PagedTable(props) {
     const classes = useStyles2();
-    const { pageLoader, headers, maxHeight, rowsPerPageOptions, selectable, dataIdPropName, selectionChanged } = props;
+    const { pageLoader, headers, maxHeight, rowsPerPageOptions, selectable, dataId,
+        selectionChanged, query, initialSelectedItems, initialSelectedItemsCallback } = props;
     const [rowsPerPage, setRowsPerPage] = React.useState(rowsPerPageOptions ? rowsPerPageOptions[0] : 20);
     const [page, setPage] = React.useState(0);
     const [rows, setRows] = useState(null);
@@ -134,13 +135,20 @@ export default function PagedTable(props) {
 
     useEffect(() => {
         handleChangePage(null, page, rowsPerPage);
-    }, []);
+    }, [query, initialSelectedItems]);
 
     const handleChangePage = (event, newPage, numberOfRows) => {
-        pageLoader(newPage + 1, numberOfRows).then(result => {
+        pageLoader(newPage + 1, numberOfRows, query).then(result => {
             setRows(result.data);
             setPage(newPage);
             setTotalCount(result.totalCount);
+            if (initialSelectedItems) {
+                setSelectedItems(initialSelectedItems);
+                if (initialSelectedItemsCallback)
+                    initialSelectedItemsCallback();
+            }
+            console.log('init items: ', initialSelectedItems);
+            console.log('internal selected items: ', selectedItems);
         })
     };
 
@@ -149,12 +157,12 @@ export default function PagedTable(props) {
         setPage(0);
         handleChangePage(null, 0, parseInt(event.target.value, 10));
     };
-    const handleRowClick = (event, id) => {
-        const selectedIndex = selectedItems.indexOf(id);
+    const handleRowClick = (event, row) => {
+        const selectedIndex = selectedItems.indexOf(selectedItems.filter(item => dataId(item) === dataId(row))[0]);
         let newSelecteds = [];
         if (selectedIndex === -1) //currently not selected
         {
-            newSelecteds = newSelecteds.concat(selectedItems, id);
+            newSelecteds = newSelecteds.concat(selectedItems, row);
         }
         else//already selected
         {
@@ -165,7 +173,13 @@ export default function PagedTable(props) {
         if (selectionChanged)
             selectionChanged(newSelecteds);
     }
-    const isItemSelected = id => selectedItems.indexOf(id) !== -1;
+    const isItemSelected = row => {
+
+        let isSelected = selectedItems && selectedItems.filter(item => dataId(item) === dataId(row)).length > 0;
+        if (isSelected)
+            console.log('selected: ', row);
+        return isSelected;
+    }
     if (!rows) {
         return (<p>در حال بارگذاری...</p>);
     }
@@ -186,16 +200,16 @@ export default function PagedTable(props) {
                 <TableBody>
 
                     {(rows).map((row, index) => (
-                        <TableRow key={index} onClick={event => handleRowClick(event, dataIdPropName ? row[dataIdPropName] : row['id'])}>
+                        <TableRow key={index} onClick={event => handleRowClick(event, row)}>
                             {selectable && <TableCell padding="checkbox">
                                 <Checkbox
-                                    checked={isItemSelected(dataIdPropName ? row[dataIdPropName] : row['id'])}
+                                    checked={isItemSelected(row)}
                                     inputProps={{ 'aria-labelledby': `checkbox-${index}` }}
                                 />
                             </TableCell>}
                             {Array.from(headers).map((header, index) => (
                                 <StyledTableCell key={index}>
-                                    {row[header.value]}
+                                    {header.value(row)}
                                 </StyledTableCell>
                             ))}
                         </TableRow>
@@ -207,7 +221,7 @@ export default function PagedTable(props) {
                             labelRowsPerPage='تعداد ردیف در هر صفحه:'
                             labelDisplayedRows={({ from, to, count }) => `صفحه ${Math.ceil(to / rowsPerPage)} از ${Math.ceil(count / rowsPerPage)}`}
                             rowsPerPageOptions={rowsPerPageOptions}
-                            colSpan={3}
+                            colSpan={headers.length + 1} //+1 is for checkbox col
                             count={totalCount}
                             rowsPerPage={rowsPerPage}
                             page={page}
@@ -231,6 +245,6 @@ PagedTable.propTypes = {
     maxHeight: PropTypes.string,
     rowsPerPageOptions: PropTypes.array.isRequired,
     selectable: PropTypes.bool,
-    dataIdPropName: PropTypes.string,
-    selectionChanged: PropTypes.func, 
+    dataId: PropTypes.func.isRequired,
+    selectionChanged: PropTypes.func,
 };

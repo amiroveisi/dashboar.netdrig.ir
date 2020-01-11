@@ -39,7 +39,6 @@ const Link = React.forwardRef((props, ref) => (
     <RouterLink innerRef={ref} {...props} />
 ));
 export default function OrderDetails(props) {
-    console.log(OrderStatuses().Confirmed);
     const classes = useStyles();
     const [order, setOrder] = useState(null);
     const { enqueueSnackbar } = useSnackbar();

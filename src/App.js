@@ -17,6 +17,7 @@ import AuthHandler from './Components/AuthHandler';
 import OrderDetails from './Views/Order/OrderDetails';
 import VirtualizedListTest from './Views/VirtualizedListTest';
 import TableTest from './Views/TableTest';
+import PackagePrepare from './Views/Order/PackagePrepare';
 
 
 const theme = createMuiTheme({
@@ -45,7 +46,7 @@ function App() {
                 <BrowserRouter>
                   <TopMenu />
                   <Switch>
-                  <Route path='/test' component={TableTest} />
+                  <Route path='/orders/:orderId/prepare' component={PackagePrepare} />
                   <Route path='/orders/:orderId/details' component={OrderDetails} />
                   
                     <Route path='/dashboard' component={Dashboard} />

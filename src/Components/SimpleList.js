@@ -11,9 +11,10 @@ import IconButton from '@material-ui/core/IconButton';
 import { pink } from '@material-ui/core/colors';
 import Divider from '@material-ui/core/Divider';
 import Tooltip from '@material-ui/core/Tooltip';
+import PropTypes from 'prop-types';
 
 const Link = React.forwardRef((props, ref) => (
-    <RouterLink innerRef={ref} {...props} />
+    <RouterLink innerRef={ref} {...props} to='' />
 ));
 
 export default function SimpleList(props) {
@@ -35,28 +36,40 @@ export default function SimpleList(props) {
             </List>
         );
     }
+    let avatar =  (item) => (<Avatar style={{ backgroundColor: pink[300] }}>
+        {item.Image ? <img src={item.Image} /> : props.defaultImage}
+    </Avatar>);
+    if(props.numberAvatar)
+    {
+        avatar = (item) => (<Avatar style={{ backgroundColor: pink[300] }}>
+            {item}
+        </Avatar>);
+    }
+    let avatarNumber = 1;
     return (
         <List>
             {
-                props.data.map(item => (
-                    <React.Fragment>
-                        <ListItem>
-                            <ListItemAvatar>
+                props.data.map((item, index) => {
+                    
+                    return (
+                    <React.Fragment key={`fragment${index}`}>
+                        <ListItem key={index}>
+                            {(props.defaultImage || item.Image || props.numberAvatar) && <ListItemAvatar>
                                 <Avatar style={{ backgroundColor: pink[300] }}>
-                                    {item.Image ? <img src={item.Image} /> : props.defaultImage}
+                                    {props.numberAvatar ? avatar(avatarNumber++) : avatar(item)}
                                 </Avatar>
-                            </ListItemAvatar>
+                            </ListItemAvatar>}
                             <ListItemText
                                 primary={props.primaryText && props.primaryText(item)}
                                 secondary={props.secondaryText && props.secondaryText(item)}
                             />
 
-                            {props.actions && props.actions.map(action => (
-                                <ListItemIcon>
+                            {props.actions && props.actions.map((action, index) => (
+                                <ListItemIcon key={index}>
                                     <Tooltip title={action.label}>
                                         <IconButton edge="start" aria-label={action.label}
                                             component={Link}
-                                            to={action.link(item)}
+                                            to={action.link && action.link(item)}
                                             onClick={action.onClick}
                                             color={action.color}
                                             {...action.otherProps}>
@@ -71,8 +84,17 @@ export default function SimpleList(props) {
                         </ListItem>
                         <Divider variant="inset" component="li" />
                     </React.Fragment>
-                ))
+                )})
             }
         </List>
     );
 }
+
+SimpleList.prototype = {
+    data: PropTypes.array.isRequired,
+    defaultImage: PropTypes.object,
+    primaryText: PropTypes.object,
+    secondaryText: PropTypes.object,
+    actions: PropTypes.array,
+    avatarNumber : PropTypes.bool
+};

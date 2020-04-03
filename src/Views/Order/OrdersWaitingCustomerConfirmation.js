@@ -14,7 +14,7 @@ import LocalOfferIcon from '@material-ui/icons/LocalOffer';
 import CloseIcon from '@material-ui/icons/Close';
 import DetailsRoundedIcon from '@material-ui/icons/DetailsRounded';
 import LocalMallRoundedIcon from '@material-ui/icons/LocalMallRounded';
-import * as persianDate from 'persian-date';
+import EditRoundedIcon from '@material-ui/icons/EditRounded';
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -29,7 +29,7 @@ const Link = React.forwardRef((props, ref) => (
     <RouterLink innerRef={ref} {...props} />
 ));
 
-export default function AcceptedOrders() {
+export default function OrdersWaitingCustomerConfirmation() {
     const [orders, setOrders] = useState(null);
     const { enqueueSnackbar } = useSnackbar();
     const [noData, setNoData] = useState(false);
@@ -45,7 +45,7 @@ export default function AcceptedOrders() {
     const loadOrders = async function (cancellationToken) {
         try {
 
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/orders/accepted`,
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/orders/waitingforcustomer`,
                 {
                     method: "GET",
                     headers: {
@@ -99,13 +99,7 @@ export default function AcceptedOrders() {
     return (
         <SimpleList data={orders}
             primaryText={(order) => `${order.Address && order.Address.AddressText || 'بدون آدرس'} - ${order.CustomerFullName || '(بدون نام)'}`}
-            secondaryText={(order) => (
-                <ul>
-                    <li>{`تلفن: ${order.Address && order.Address.PhoneNumber || 'بدون شماره تلفن'}`}</li>
-                    <li>{`شماره سفارش: #${order.Code || '-----'}`}</li>
-                    <li>{`تاریخ ثبت سفارش: ${new persianDate(new Date(order.CreatedOn)).format()}`}</li>
-                </ul>
-            )}
+            secondaryText={(order) => `${order.Address && order.Address.PhoneNumber || 'بدون شماره تلفن'} - #${order.Code || '0000'}`}
             actions={[
                 {
                     label: 'جزئیات سفارش',

@@ -13,6 +13,9 @@ import Tab from '@material-ui/core/Tab';
 import TabPanel from '../../Components/TabPanel';
 import ReadytoAcceptOrders from '../Order/ReadyToAcceptOrders';
 import InProgressOrders from '../Order/AcceptedOrders';
+import OrdersWaitingCustomerConfirmation from '../Order/OrdersWaitingCustomerConfirmation';
+import OrdersNeedCorrection from '../Order/OrdersNeedCorrection';
+import OrdersReadyToDelivery from '../Order/OrdersReadyToDelivery';
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -42,18 +45,27 @@ export default function Dashboard() {
                     <Tabs value={value} onChange={handleChange} >
                         <Tab label="سفارش های قابل پذیرش" />
                         <Tab label="سفارش های پذیرفته شده" />
-                        <Tab label="سفارش های در حال آماده سازی" />
-                        <Tab label="سفارش های ارسال شده"/>
+                        <Tab label="سفارش های منتظر تایید مشتری" />
+                        <Tab label="درخواست های اصلاح سفارش مشتری" />
+                        <Tab label="سفارش های آماده ارسال" />
+                        <Tab label="سفارش های ارسال شده" />
                     </Tabs>
                     <TabPanel value={value} index={0}>
-                       <ReadytoAcceptOrders/>
+                        <ReadytoAcceptOrders />
                     </TabPanel>
                     <TabPanel value={value} index={1}>
-                        <InProgressOrders/>
-            </TabPanel>
+                        <InProgressOrders />
+                    </TabPanel>
                     <TabPanel value={value} index={2}>
-                        Item 3
-            </TabPanel>
+                        <OrdersWaitingCustomerConfirmation />
+                    </TabPanel>
+                    <TabPanel value={value} index={3}>
+                        <OrdersNeedCorrection/>
+                    </TabPanel>
+                    <TabPanel value={value} index={4}>
+                        <OrdersReadyToDelivery/>
+                    </TabPanel>
+                    
                 </Grid>
             </Grid>
         </div>

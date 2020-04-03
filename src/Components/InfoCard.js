@@ -1,12 +1,23 @@
 import React from 'react';
 import { Grid, Paper, Typography } from '@material-ui/core';
 import PropTypes from 'prop-types';
+import useNetDrugStyles from './Styles';
 export default function InfoCard(props) {
+    const classes = useNetDrugStyles();
     return (
-        <Paper elevation={props.elevation ? props.elevation : 0} style={{background: props.background ? props.background : 'white'}}>
-            <Grid container alignItems='center' justify='flex-start' style={{ padding: '12px' }} >
+        <Paper elevation={props.elevation ? props.elevation : 0}
+        //className={classes.dottedBorderHorizontal}
+        style={
+            {
+                //background: props.background ? props.background : 'white',
+                // background:  'linear-gradient(to right, #42a5f599, #4fc3f7aa)',
+                // boxShadow: '0px 2px 12px #42a5f566'
+                
+            }
+            }>
+            <Grid container alignItems='center' justify='center' style={{ padding: '12px' }} >
                 <Grid container>
-                    <Grid item style={{ marginLeft: '10px', fontSize: '0px' }}>
+                    <Grid item style={{ marginLeft: '5px', fontSize: '0px' }}>
                        {props.icon}
                     </Grid>
                     <Grid item>
@@ -18,8 +29,8 @@ export default function InfoCard(props) {
                 </Grid>
                 <Grid container justify='flex-end'>
                     <Grid item >
-                        <Typography variant='subtitle1' color='textPrimary' style={{ fontFamily: 'IranSans' }}>
-                            {props.data}
+                        <Typography variant='caption' color='textPrimary' style={{ fontFamily: 'IranSans'}}>
+                            {props.data} 
                         </Typography>
                     </Grid>
                 </Grid>

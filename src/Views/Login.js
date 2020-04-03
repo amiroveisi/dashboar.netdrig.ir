@@ -12,6 +12,8 @@ import * as ConstantValues from '../Helpers/ConstantValues';
 
 import { useSnackbar } from 'notistack';
 import * as AuthHelper from '../Helpers/AuthHelper';
+import useNetDrugStyles from '../Components/Styles';
+
 const useStyles = makeStyles(theme => ({
     root: {
         flexGrow: 1,
@@ -40,6 +42,7 @@ export default function Login() {
     const [isLoading, setIsLoading] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const { enqueueSnackbar } = useSnackbar();
+    const netDrugStyles = useNetDrugStyles();
     const handleLogin = async () => {
         setIsLoading(true);
         try {
@@ -123,7 +126,7 @@ export default function Login() {
                             </FormControl>
                         </Grid>
                         <Grid item alignItems="stretch">
-                            <Button fullWidth variant="contained" disabled={isLoading} color="primary" startIcon={<KeyIcon />} onClick={handleLogin}>
+                            <Button className={netDrugStyles.gradientButtonPrimary} fullWidth variant="contained" disabled={isLoading} color="primary" startIcon={<KeyIcon />} onClick={handleLogin}>
                                 ورود
                                 </Button>
                         </Grid>

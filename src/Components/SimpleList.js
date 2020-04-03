@@ -8,16 +8,19 @@ import Avatar from '@material-ui/core/Avatar';
 import { Link as RouterLink } from 'react-router-dom';
 import Skeleton from '@material-ui/lab/Skeleton';
 import IconButton from '@material-ui/core/IconButton';
-import { pink } from '@material-ui/core/colors';
+import { pink, grey } from '@material-ui/core/colors';
 import Divider from '@material-ui/core/Divider';
 import Tooltip from '@material-ui/core/Tooltip';
 import PropTypes from 'prop-types';
+import useNetDrugStyles from './Styles';
+import {Typography} from '@material-ui/core';
 
 const Link = React.forwardRef((props, ref) => (
-    <RouterLink innerRef={ref} {...props} to='' />
+    <RouterLink innerRef={ref} {...props} />
 ));
 
 export default function SimpleList(props) {
+    const netDrugStyles = useNetDrugStyles();
     if (!props.data) {
         return (
             <List>
@@ -36,12 +39,12 @@ export default function SimpleList(props) {
             </List>
         );
     }
-    let avatar =  (item) => (<Avatar style={{ backgroundColor: pink[300] }}>
+    let avatar =  (item) => (<Avatar style={{ backgroundColor: '#A1DFFB', borderWidth:'0px' }}>
         {item.Image ? <img src={item.Image} /> : props.defaultImage}
     </Avatar>);
     if(props.numberAvatar)
     {
-        avatar = (item) => (<Avatar style={{ backgroundColor: pink[300] }}>
+        avatar = (item) => (<Avatar style={{ backgroundColor: '#A1DFFB', borderWidth:'0px' }}>
             {item}
         </Avatar>);
     }
@@ -55,13 +58,17 @@ export default function SimpleList(props) {
                     <React.Fragment key={`fragment${index}`}>
                         <ListItem key={index}>
                             {(props.defaultImage || item.Image || props.numberAvatar) && <ListItemAvatar>
-                                <Avatar style={{ backgroundColor: pink[300] }}>
+                                <Avatar style={{ backgroundColor: '#A1DFFB' }}>
                                     {props.numberAvatar ? avatar(avatarNumber++) : avatar(item)}
                                 </Avatar>
                             </ListItemAvatar>}
                             <ListItemText
-                                primary={props.primaryText && props.primaryText(item)}
-                                secondary={props.secondaryText && props.secondaryText(item)}
+                                primary={<Typography variant='subtitle2'>
+                                    {props.primaryText && props.primaryText(item)}
+                                </Typography>}
+                                secondary={<Typography variant='caption' style={{color:grey[600]}}>
+                                    {props.secondaryText && props.secondaryText(item)}
+                                </Typography>}
                             />
 
                             {props.actions && props.actions.map((action, index) => (
@@ -69,8 +76,9 @@ export default function SimpleList(props) {
                                     <Tooltip title={action.label}>
                                         <IconButton edge="start" aria-label={action.label}
                                             component={Link}
-                                            to={action.link && action.link(item)}
-                                            onClick={action.onClick}
+                                            style={action.customClass}
+                                            to={action.link ? action.link(item) : '#'}
+                                            onClick={event => action.onClick ? action.onClick(item) : null}
                                             color={action.color}
                                             {...action.otherProps}>
                                             {action.icon}
@@ -96,5 +104,6 @@ SimpleList.prototype = {
     primaryText: PropTypes.object,
     secondaryText: PropTypes.object,
     actions: PropTypes.array,
-    avatarNumber : PropTypes.bool
+    avatarNumber : PropTypes.bool,
+    customClass: PropTypes.object
 };

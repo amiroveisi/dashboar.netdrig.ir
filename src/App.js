@@ -18,6 +18,9 @@ import OrderDetails from './Views/Order/OrderDetails';
 import VirtualizedListTest from './Views/VirtualizedListTest';
 import TableTest from './Views/TableTest';
 import PackagePrepare from './Views/Order/PackagePrepare';
+import OrdersWaitingCustomerConfirmation from './Views/Order/OrdersWaitingCustomerConfirmation';
+import GradientBtn from './Components/GradientButton/GradientButton';
+import OrdersReadyToDelivery from './Views/Order/OrdersReadyToDelivery';
 
 
 const theme = createMuiTheme({
@@ -45,7 +48,10 @@ function App() {
               <body>
                 <BrowserRouter>
                   <TopMenu />
-                  <Switch>
+                <Switch>
+                <Route path='/test' component={GradientBtn} />
+                  <Route path='/orders/waitingforcustomer' component={OrdersWaitingCustomerConfirmation} />
+                  <Route path='/orders/readytodelivery' component={OrdersReadyToDelivery} />
                   <Route path='/orders/:orderId/prepare' component={PackagePrepare} />
                   <Route path='/orders/:orderId/details' component={OrderDetails} />
                   

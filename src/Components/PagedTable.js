@@ -16,6 +16,7 @@ import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import LastPageIcon from '@material-ui/icons/LastPage';
 import { TableHead, Checkbox } from '@material-ui/core';
 import Tooltip from '@material-ui/core/Tooltip';
+import { prototype } from 'react-window-infinite-loader';
 
 const useStyles1 = makeStyles(theme => ({
     root: {
@@ -126,7 +127,7 @@ const StyledTableRow = withStyles(theme => ({
 export default function PagedTable(props) {
     const classes = useStyles2();
     const { pageLoader, headers, maxHeight, rowsPerPageOptions, selectable, dataId,
-        selectionChanged, query, initialSelectedItems, initialSelectedItemsCallback } = props;
+        selectionChanged, query, initialSelectedItems, initialSelectedItemsCallback, headerStyle } = props;
     const [rowsPerPage, setRowsPerPage] = React.useState(rowsPerPageOptions ? rowsPerPageOptions[0] : 20);
     const [page, setPage] = React.useState(0);
     const [rows, setRows] = useState(null);
@@ -188,10 +189,10 @@ export default function PagedTable(props) {
             <Table stickyHeader className={classes.table} aria-label="">
                 <TableHead>
                     <TableRow>
-                        {selectable && <TableCell padding='checkbox'>
+                        {selectable && <TableCell style={headers[0].style ? headers[0].style : ''} padding='checkbox'>
                         </TableCell>}
                         {(headers).map((header, index) => (
-                            <StyledTableCell key={index}>
+                            <StyledTableCell key={index} style={header.style}>
                                 {header.title}
                             </StyledTableCell>
                         ))}

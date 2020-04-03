@@ -24,6 +24,8 @@ import * as AuthHelper from '../../Helpers/AuthHelper';
 import OrderStatuses from '../../Helpers/OrderStatus';
 import { Redirect } from 'react-router-dom';
 import { Link as RouterLink } from 'react-router-dom';
+import useNetDrugStyles from '../../Components/Styles';
+import useColors from '../../Components/Colors';
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -40,10 +42,12 @@ const Link = React.forwardRef((props, ref) => (
 ));
 export default function OrderDetails(props) {
     const classes = useStyles();
+    const colors = useColors();
     const [order, setOrder] = useState(null);
     const { enqueueSnackbar } = useSnackbar();
     const [orderConfirmed, setOrderConfirmed] = useState(false);
     const [unauthorized, setUnauthorized] = useState(false);
+    const netDrugStyles = useNetDrugStyles();
     useEffect(() => {
         const abortController = new AbortController();
         const abortSignal = abortController.signal;
@@ -97,7 +101,6 @@ export default function OrderDetails(props) {
     const confirmOrder = async function () {
         try {
             let orderId = order.Id;
-            console.log('confirm clicked');
             const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/orders/${orderId}/confirm`,
                 {
                     method: "POST",
@@ -121,6 +124,7 @@ export default function OrderDetails(props) {
                     if (serverData && serverData.Data && serverData.Code === '0') {
                         setOrderConfirmed(true);
                         setOrder(serverData.Data);
+                        enqueueSnackbar("سفارش با موفقیت پذیرفته شد", { variant: 'success' });
                     }
                     else {
                         enqueueSnackbar("خطا در دریافت اطلاعات سفارش. لطفا صفحه را مجددا بارگذاری نمایید", { variant: 'warning' });
@@ -164,6 +168,7 @@ export default function OrderDetails(props) {
                     if (serverData && serverData.Data && serverData.Code === '0') {
                         setOrderConfirmed(true);
                         setOrder(serverData.Data);
+                        enqueueSnackbar("سفارش با موفقیت لغو شد", { variant: 'success' });
                     }
                     else {
                         enqueueSnackbar("خطا در دریافت اطلاعات سفارش. لطفا صفحه را مجددا بارگذاری نمایید", { variant: 'warning' });
@@ -201,58 +206,73 @@ export default function OrderDetails(props) {
                     <Grid item container xs={12} sm={6} md={3} spacing={0}>
                         <Grid item xs={12}>
                             <InfoCard title='سفارش دهنده' data={order.CustomerFullName || 'نامشخص'}
-                                icon={<PersonRoundedIcon style={{ color: grey[400] }} />} />
+                                icon={<PersonRoundedIcon style={{ color: colors.primaryLight }} />} />
                             <Divider variant='middle' />
                         </Grid>
                         <Grid item xs={12}>
                             <InfoCard title='تاریخ ثبت سفارش' data={order.CreatedOn || 'نامشخص'}
-                                icon={<EventIcon style={{ color: grey[400] }} />} />
+                                icon={<EventIcon style={{ color: colors.primaryLight }} />} />
                             <Divider variant='middle' />
                         </Grid>
                         <Grid item xs={12}>
                             <InfoCard title='شماره سفارش' data={order.Code || 'ندارد'}
-                                icon={<LocalOfferIcon style={{ color: grey[400] }} />} />
+                                icon={<LocalOfferIcon style={{ color: colors.primaryLight }} />} />
                             <Divider variant='middle' />
                         </Grid>
                         <Grid item xs={12}>
                             <InfoCard title='نحوه دریافت' data={order.DeliveryType || 'نامشخص'}
-                                icon={<BusinessCenterIcon style={{ color: grey[400] }} />} />
+                                icon={<BusinessCenterIcon style={{ color: colors.primaryLight }} />} />
                             <Divider variant='middle' />
                         </Grid>
                         <Grid item xs={12}>
                             <InfoCard title='وضعیت سفارش' data={order.LastStatus || 'نامشخص'}
-                                icon={<AssignmentRoundedIcon style={{ color: grey[400] }} />} />
+                                icon={<AssignmentRoundedIcon style={{ color: colors.primaryLight }} />} />
                             <Divider variant='middle' />
                         </Grid>
                         <Grid item xs={12}>
                             <InfoCard title='زمان تقریبی دریافت سفارش' data={order.DeliveryApproximateTime || 'نامشخص'}
-                                icon={<ScheduleIcon style={{ color: grey[400] }} />} />
+                                icon={<ScheduleIcon style={{ color: colors.primaryLight }} />} />
                             <Divider variant='middle' />
                         </Grid>
                         <Grid item xs={12}>
                             <InfoCard title='آدرس' data={order.Address && order.Address.AddressText || 'بدون آدرس'}
-                                icon={<LocationOnRoundedIcon style={{ color: grey[400] }} />} />
+                                icon={<LocationOnRoundedIcon style={{ color: colors.primaryLight }} />} />
                             <Divider variant='middle' />
                         </Grid>
                         <Grid container item spacing={1} style={{ marginTop: '10px' }}>
                             <Grid item xs={12}>
                                 {order && order.LastStatus === OrderStatuses().WaitingToBeAcceptedByDrugStore &&
-                                    <Button fullWidth variant='contained' onClick={confirmOrder}
-                                        color='primary'>قبول کردن سفارش</Button>}
+                                    <Button fullWidth
+                                        className={netDrugStyles.gradientButtonPrimary}
+                                        onClick={confirmOrder}
+                                    >قبول کردن سفارش</Button>}
                                 {order && order.LastStatus === OrderStatuses().Confirmed &&
-                                    <Button fullWidth variant='contained' onClick={confirmOrder}
-                                        color='primary'>شروع آماده سازی سفارش</Button>}
+                                    <Button fullWidth
+                                        className={netDrugStyles.gradientButtonPrimary}
+                                        component={Link} to={`/orders/${order.Id}/prepare`}
+                                    >شروع آماده سازی سفارش</Button>}
+                                {order && order.LastStatus === OrderStatuses().ReadyToDelivery &&
+                                    <Button fullWidth
+                                        className={netDrugStyles.gradientButtonPrimary}
+                                        component={Link} to={`/orders/${order.Id}/ship`}
+                                    >ارسال سفارش</Button>}
+
                             </Grid>
                             <Grid item xs={12}>
-                               
-                                {order && order.LastStatus === OrderStatuses().Confirmed &&
-                                    <Button fullWidth variant='outlined' onClick={cancelOrder}
-                                        color='secondary'>لغو سفارش</Button>}
+
+                                {order && (order.LastStatus === OrderStatuses().Confirmed ||
+                                    order.LastStatus === OrderStatuses().ReadyToDelivery) &&
+                                    <Button fullWidth
+                                        className={netDrugStyles.gradientButtonSecondaryOutlined}
+                                        onClick={cancelOrder}
+                                    >لغو سفارش</Button>}
                             </Grid>
                             <Grid item xs={12}>
                                 <Button component={Link} to='/dashboard'
-                                    fullWidth variant='outlined'
-                                    color='default'>بازگشت به لیست سفارش ها</Button>
+                                    fullWidth
+                                    className={netDrugStyles.gradientButtonPrimaryOutlined}
+
+                                >بازگشت به لیست سفارش ها</Button>
                             </Grid>
                         </Grid>
 

@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import TableContainer from '@material-ui/core/TableContainer';
-import { Grid, Paper, Typography, Button, TextField, FormControl, IconButton, Tooltip } from '@material-ui/core';
+import { Grid, Paper, Typography, Button, TextField, FormControl, IconButton, Tooltip, FormGroup, Fab, Divider, CardContent, Card, CardActions, CardHeader } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import EventIcon from '@material-ui/icons/Event';
 import LocalOfferIcon from '@material-ui/icons/LocalOffer';
@@ -17,11 +11,9 @@ import LocationOnRoundedIcon from '@material-ui/icons/LocationOnRounded';
 import PersonRoundedIcon from '@material-ui/icons/PersonRounded';
 import AssignmentRoundedIcon from '@material-ui/icons/AssignmentRounded';
 import noImage from '../../Assets/Images/no-image.jpg';
-import Divider from '@material-ui/core/Divider';
 import { useSnackbar } from 'notistack';
 import * as ConstantValues from '../../Helpers/ConstantValues';
 import * as AuthHelper from '../../Helpers/AuthHelper';
-import OrderStatuses from '../../Helpers/OrderStatus';
 import { Redirect } from 'react-router-dom';
 import { Link as RouterLink } from 'react-router-dom';
 import PagedTable from '../../Components/PagedTable';
@@ -34,8 +26,13 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
-
-
+import useNetDrugStyles from '../../Components/Styles';
+import ArrowLeftRoundedIcon from '@material-ui/icons/ArrowLeftRounded';
+import ReciepCard from '../../Components/ReciepCard';
+import ExpandMoreRoundedIcon from '@material-ui/icons/ExpandMoreRounded';
+import ExpandLessRoundedIcon from '@material-ui/icons/ExpandLessRounded';
+import Collapsible from 'react-collapsible';
+import PlaylistAddCheckRoundedIcon from '@material-ui/icons/PlaylistAddCheckRounded';
 const useStyles = makeStyles(theme => ({
     root: {
         flexGrow: 1,
@@ -52,6 +49,7 @@ const Link = React.forwardRef((props, ref) => (
 
 export default function PackagePrepare(props) {
     const classes = useStyles();
+    const netDrugStyles = useNetDrugStyles();
     const [addedDrugs, setAddedDrugs] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchClicked, setSearchClicked] = useState(false);
@@ -61,11 +59,17 @@ export default function PackagePrepare(props) {
     const [orderConfirmed, setOrderConfirmed] = useState(false);
     const [unauthorized, setUnauthorized] = useState(false);
     const [numberDialogOpen, setNumberDialogOpen] = useState(false);
-    const [currentDrugCount, setCurrentDrugCount] = useState(0);
+    const [currentDrugCount, setCurrentDrugCount] = useState(1);
+    const [currentDrugPrice, setCurrentDrugPrice] = useState(0);
     const pagedTableRef = useRef();
     const [tempSelectedItems, setTempSelectedItems] = useState([]);
     const [currentSelectedItem, setCurrentSelectedItem] = useState({});
     const [cancelDrugSelection, setCancelDrugSelection] = useState(false);
+    const [imageDialogOpen, setImageDialogOpen] = useState(false);
+    const [packageCreatedSuccessfuly, setPackageCreatedSuccessfuly] = useState(false);
+    const [isDetailCardOpen, setIsDetailCardOpen] = useState(false);
+    const [imageHeight, setImageHeight] = useState(0);
+    const infoCardRef = useRef(null);
     useEffect(() => {
         const abortController = new AbortController();
         const abortSignal = abortController.signal;
@@ -146,9 +150,76 @@ export default function PackagePrepare(props) {
                     const serverData = await response.json();
                     if (serverData && serverData.Data && serverData.Code === '0') {
                         setOrder(serverData.Data);
+                        if (serverData.Data.OrderItems) {
+                            setImageHeight(document.getElementById('infoCard').clientHeight);
+                            setAddedDrugs(serverData.Data.OrderItems.map(orderItem => ({
+                                Drug: {
+                                    GenericNameFarsi: orderItem.Name,
+                                    GenericNameEnglish: orderItem.GenericName,
+                                    Id: orderItem.DrugId
+                                },
+                                Info: {
+                                    Producer: orderItem.Producer,
+                                    Id: orderItem.CommercialInfoId
+                                },
+                                Price: orderItem.Price,
+                                Quantity: orderItem.Quantity
+                            })));
+                            setCancelDrugSelection(true);
+                        }
                     }
                     else {
                         enqueueSnackbar("خطا در دریافت اطلاعات داروخانه. لطفا صفحه را مجددا بارگذاری نمایید", { variant: 'warning' });
+                    }
+
+                } catch (error) {
+                    enqueueSnackbar("خطا در دریافت اطلاعات از سرور", { variant: 'error' });
+                }
+            }
+
+        } catch (error) {
+            console.log(error);
+            if (error == 'TypeError: Failed to fetch') {
+                enqueueSnackbar('خطا در برقراری ارتباط با سرور. لطفا ارتباط اینترنتی خود را بررسی کنید', { variant: 'error' });
+            }
+        }
+    }
+    const finishPacking = async function () {
+        try {
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/orders/${order.Id}/package`,
+                {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${AuthHelper.GetAuthToken()}`
+                    },
+                    body: JSON.stringify(addedDrugs.map(drug => ({
+                        Name: drug.Drug.GenericNameFarsi,
+                        GenericName: drug.Drug.GenericNameEnglish,
+                        Price: drug.Price,
+                        Quantity: drug.Quantity,
+                        Producer: drug.Info.Producer,
+                        CommercialInfoId: drug.Info.Id,
+                        DrugId: drug.Drug.Id
+                    })))
+                });
+            if (!response) {
+                enqueueSnackbar(`خطایی رخ داده است. ${response.status} ${response.statusText}`, { variant: 'error' });
+            }
+            else if (response.status === 401) {
+                setUnauthorized(true);
+                enqueueSnackbar("شما وارد حساب کاربری خود نشده اید یا دسترسی به این بخش ندارید", { variant: 'error' });
+
+            }
+            else {
+                try {
+                    const serverData = await response.json();
+                    if (serverData && serverData.Data && serverData.Code === '0') {
+                        setPackageCreatedSuccessfuly(true);
+                        enqueueSnackbar('سفارش با موفقیت تکمیل و برای کاربر ارسال گردید. منتظر تایید کاربر باشید', { variant: 'success' });
+                    }
+                    else {
+                        enqueueSnackbar("خطا در تکمیل سفارش. لطفا صفحه را مجددا بارگذاری نمایید", { variant: 'warning' });
                     }
 
                 } catch (error) {
@@ -172,14 +243,14 @@ export default function PackagePrepare(props) {
     }
     const handleNumberDialogClose = () => {
         setNumberDialogOpen(false);
-        // setCurrentSelectedItem({});
-        // setTempSelectedItems([]);
         setCancelDrugSelection(true);
+
     }
     const handleNumberdialogConfirmation = () => {
         setNumberDialogOpen(false);
         let tempCurrentItem = currentSelectedItem;
-        tempCurrentItem.quantity = currentDrugCount;
+        tempCurrentItem.Quantity = currentDrugCount;
+        tempCurrentItem.Price = currentDrugPrice;
         setCurrentSelectedItem(tempCurrentItem);
         let copyOfTempSelectedItems = [];
         copyOfTempSelectedItems = copyOfTempSelectedItems.concat(tempSelectedItems);
@@ -195,89 +266,229 @@ export default function PackagePrepare(props) {
     if (!order) {
         return (<p>در حال بارگذاری...</p>);
     }
+    if (packageCreatedSuccessfuly) {
+        return (<Redirect to='/orders' />);
+    }
     const infoCardsBreakPoints = {
         xs: 12,
         sm: 6,
         md: 3,
 
     };
+    const orderInfoData = (
+        <React.Fragment>
+            {order.CustomerFullName} <br />
+            {order.CreatedOn}
+        </React.Fragment>
+    )
+    const infoHeaderClosedState = (
+        <Card id='infoCard'>
+            <CardContent>
+                <Grid item container justify='space-between' xs={12}>
+                    <Grid item spacing={1} container alignContent='center' style={{ width: 'auto' }}>
+                        <Grid item>
+                            <PersonRoundedIcon style={{ color: '#4fc3f788' }} />
+                        </Grid>
+                        <Grid item>
+                            <Typography variant='caption'>سفارش دهند</Typography>
+                        </Grid>
+                    </Grid>
+                    <Grid item>
+                        <Typography variant='caption'>{order.CustomerFullName || 'نامشخص'}</Typography>
+                    </Grid>
+                </Grid>
+                <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
+                <Grid item container justify='space-between' xs={12}>
+                    <Grid item spacing={1} container style={{ width: 'auto' }} alignContent='center'>
+                        <Grid item>
+                            <EventIcon style={{ color: '#4fc3f788' }} />
+                        </Grid>
+                        <Grid item>
+                            <Typography variant='caption'>تاریخ ثبت سفارش</Typography>
+                        </Grid>
+                    </Grid>
+                    <Grid item>
+                        <Typography variant='caption'>{order.CreatedOn || 'نامشخص'}</Typography>
+                    </Grid>
+                </Grid>
+                <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
+                <Grid item container justify='space-between' xs={12}>
+                    <Grid item spacing={1} container style={{ width: 'auto' }} alignContent='center'>
+                        <Grid item>
+                            <LocalOfferIcon style={{ color: '#4fc3f788' }} />
+                        </Grid>
+                        <Grid item>
+                            <Typography variant='caption'>شماره سفارش</Typography>
+                        </Grid>
+                    </Grid>
+                    <Grid item>
+                        <Typography variant='caption'>{order.Code || 'نامشخص'}</Typography>
+                    </Grid>
+                </Grid>
+            </CardContent>
+            <CardActions>
+                <Button startIcon={<ExpandMoreRoundedIcon />}
+                    className={netDrugStyles.gradientButtonPrimaryFlat}
+                    aria-label="جزئیات بیشتر" onClick={() => setIsDetailCardOpen(!isDetailCardOpen)}>
+                    <Typography variant='caption'>
+                        اطلاعات بیشتر
+                    </Typography>
+                </Button>
+            </CardActions>
+        </Card>
+    );
+
     return (
 
         <div className={classes.root}>
             <Grid container className={classes.grid} spacing={2}>
-                <Grid container spacing={2}>
-                    <Grid item container xs={12} sm={12} md={12} lg={8} spacing={1}>
-                        <Grid item {...infoCardsBreakPoints}>
-                            <InfoCard background={grey[50]} title='سفارش دهنده' data={order.CustomerFullName || 'نامشخص'}
-                                icon={<PersonRoundedIcon style={{ color: grey[400] }} />} />
+                <Grid container item spacing={2}>
+                    <Grid item container justify='space-between' xs={12} sm={12} md={8} spacing={1}
+                    >
+                        <Collapsible ref={infoCardRef} trigger={infoHeaderClosedState}
+                            open={isDetailCardOpen}
+                            triggerDisabled={true}
+                            triggerWhenOpen={<div />}
+                            overflowWhenOpen='inherit'
+                            containerElementProps={{
+                                id: 'collapsibleCard',
+                                style: {
+                                    'width': '100%'
+                                }
+                            }}
 
-                        </Grid>
+                        >
+                            <Card id='infoCard'>
+                                <CardContent>
+                                    <Grid item container justify='space-between' xs={12}>
+                                        <Grid item spacing={1} container alignContent='center' style={{ width: 'auto' }}>
+                                            <Grid item>
+                                                <PersonRoundedIcon style={{ color: '#4fc3f788' }} />
+                                            </Grid>
+                                            <Grid item>
+                                                <Typography variant='caption'>سفارش دهند</Typography>
+                                            </Grid>
+                                        </Grid>
+                                        <Grid item>
+                                            <Typography variant='caption'>{order.CustomerFullName || 'نامشخص'}</Typography>
+                                        </Grid>
+                                    </Grid>
+                                    <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
+                                    <Grid item container justify='space-between' xs={12}>
+                                        <Grid item spacing={1} container style={{ width: 'auto' }} alignContent='center'>
+                                            <Grid item>
+                                                <EventIcon style={{ color: '#4fc3f788' }} />
+                                            </Grid>
+                                            <Grid item>
+                                                <Typography variant='caption'>تاریخ ثبت سفارش</Typography>
+                                            </Grid>
+                                        </Grid>
+                                        <Grid item>
+                                            <Typography variant='caption'>{order.CreatedOn || 'نامشخص'}</Typography>
+                                        </Grid>
+                                    </Grid>
+                                    <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
+                                    <Grid item container justify='space-between' xs={12}>
+                                        <Grid item spacing={1} container style={{ width: 'auto' }} alignContent='center'>
+                                            <Grid item>
+                                                <LocalOfferIcon style={{ color: '#4fc3f788' }} />
+                                            </Grid>
+                                            <Grid item>
+                                                <Typography variant='caption'>شماره سفارش</Typography>
+                                            </Grid>
+                                        </Grid>
+                                        <Grid item>
+                                            <Typography variant='caption'>{order.Code || 'نامشخص'}</Typography>
+                                        </Grid>
+                                    </Grid>
+                                    <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
+                                    <Grid item container justify='space-between' xs={12}>
+                                        <Grid item spacing={1} container style={{ width: 'auto' }} alignContent='center'>
+                                            <Grid item>
+                                                <BusinessCenterIcon style={{ color: '#4fc3f788' }} />
+                                            </Grid>
+                                            <Grid item>
+                                                <Typography variant='caption'>نحوه دریافت</Typography>
+                                            </Grid>
+                                        </Grid>
+                                        <Grid item>
+                                            <Typography variant='caption'>{order.DeliveryType || 'نامشخص'}</Typography>
+                                        </Grid>
+                                    </Grid>
+                                    <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
+                                    <Grid item container justify='space-between' xs={12}>
+                                        <Grid item spacing={1} container style={{ width: 'auto' }} alignContent='center'>
+                                            <Grid item>
+                                                <AssignmentRoundedIcon style={{ color: '#4fc3f788' }} />
+                                            </Grid>
+                                            <Grid item>
+                                                <Typography variant='caption'>وضعیت سفارش</Typography>
+                                            </Grid>
+                                        </Grid>
+                                        <Grid item>
+                                            <Typography variant='caption'>{order.LastStatus || 'نامشخص'}</Typography>
+                                        </Grid>
+                                    </Grid>
+                                    <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
+                                    <Grid item container justify='space-between' xs={12}>
+                                        <Grid item spacing={1} container style={{ width: 'auto' }} alignContent='center'>
+                                            <Grid item>
+                                                <ScheduleIcon style={{ color: '#4fc3f788' }} />
+                                            </Grid>
+                                            <Grid item>
+                                                <Typography variant='caption'>زمان تقریبی دریافت سفارش</Typography>
+                                            </Grid>
+                                        </Grid>
+                                        <Grid item>
+                                            <Typography variant='caption'>{order.DeliveryApproximateTime || 'نامشخص'}</Typography>
+                                        </Grid>
+                                    </Grid>
+                                    <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
+                                    <Grid item container justify='space-between' xs={12}>
+                                        <Grid item spacing={1} container style={{ width: 'auto' }} alignContent='center'>
+                                            <Grid item>
+                                                <LocationOnRoundedIcon style={{ color: '#4fc3f788' }} />
+                                            </Grid>
+                                            <Grid item>
+                                                <Typography variant='caption'>آدرس</Typography>
+                                            </Grid>
+                                        </Grid>
+                                        <Grid item>
+                                            <Typography variant='caption'>{order.Address && order.Address.AddressText || 'بدون آدرس'}</Typography>
+                                        </Grid>
+                                    </Grid>
+                                </CardContent>
+                                <CardActions >
+                                    {isDetailCardOpen ? (<CardActions>
+                                        <Button
+                                            className={netDrugStyles.gradientButtonPrimaryFlat}
+                                            startIcon={<ExpandLessRoundedIcon />}
+                                            id='toggler' aria-label="جزئیات کمتر"
+                                            onClick={() => setIsDetailCardOpen(!isDetailCardOpen)}>
+                                            <Typography variant='caption'>
+                                                اطلاعات کمتر
+                                           </Typography>
+                                        </Button>
+                                    </CardActions>) : <div />}
+                                </CardActions>
+                            </Card>
 
-                        <Grid item {...infoCardsBreakPoints}>
-                            <InfoCard background={grey[50]} title='تاریخ ثبت سفارش' data={order.CreatedOn || 'نامشخص'}
-                                icon={<EventIcon style={{ color: grey[400] }} />} />
-
-                        </Grid>
-
-                        <Grid item {...infoCardsBreakPoints}>
-                            <InfoCard background={grey[50]} title='شماره سفارش' data={order.Code || 'ندارد'}
-                                icon={<LocalOfferIcon style={{ color: grey[400] }} />} />
-
-                        </Grid>
-
-                        <Grid item {...infoCardsBreakPoints}>
-                            <InfoCard background={grey[50]} title='نحوه دریافت' data={order.DeliveryType || 'نامشخص'}
-                                icon={<BusinessCenterIcon style={{ color: grey[400] }} />} />
-
-                        </Grid>
-
-                        <Grid item {...infoCardsBreakPoints}>
-                            <InfoCard background={grey[50]} title='وضعیت سفارش' data={order.LastStatus || 'نامشخص'}
-                                icon={<AssignmentRoundedIcon style={{ color: grey[400] }} />} />
-
-                        </Grid>
-
-                        <Grid item {...infoCardsBreakPoints}>
-                            <InfoCard background={grey[50]} title='زمان تقریبی دریافت سفارش' data={order.DeliveryApproximateTime || 'نامشخص'}
-                                icon={<ScheduleIcon style={{ color: grey[400] }} />} />
-
-                        </Grid>
-
-                        <Grid item xs={6}>
-                            <InfoCard background={grey[50]} title='آدرس' data={order.Address && order.Address.AddressText || 'بدون آدرس'}
-                                icon={<LocationOnRoundedIcon style={{ color: grey[400] }} />} />
-                        </Grid>
-
-                        {/* <Grid container item spacing={1} style={{ marginTop: '10px' }}>
-                            <Grid item xs={12}>
-                                {order && order.LastStatus === OrderStatuses().WaitingToBeAcceptedByDrugStore &&
-                                    <Button fullWidth variant='contained' onClick={confirmOrder}
-                                        color='primary'>قبول کردن سفارش</Button>}
-                                {order && order.LastStatus === OrderStatuses().Confirmed &&
-                                    <Button fullWidth variant='contained' onClick={confirmOrder}
-                                        color='primary'>شروع آماده سازی سفارش</Button>}
-                            </Grid>
-                            <Grid item xs={12}>
-                               
-                                {order && order.LastStatus === OrderStatuses().Confirmed &&
-                                    <Button fullWidth variant='outlined' onClick={cancelOrder}
-                                        color='secondary'>لغو سفارش</Button>}
-                            </Grid>
-                            <Grid item xs={12}>
-                                <Button component={Link} to='/dashboard'
-                                    fullWidth variant='outlined'
-                                    color='default'>بازگشت به لیست سفارش ها</Button>
-                            </Grid>
-                        </Grid> */}
-
+                        </Collapsible >
                     </Grid>
-                    <Grid item xs={4} style={{ background: grey[100] }}>
-                        <img src={order.PrescriptionImageData ? order.PrescriptionImageData : noImage} alt='تصویر دارو/نسخه' height='200px' />
-
+                    <Grid item xs={12} sm={12} md={4} spacing={1}>
+                        <Card style={{ height: imageHeight }}>
+                            <CardContent>
+                                <Tooltip title='جهت نمایش تصویر بزرگتر کلیک کنید'>
+                                    <img src={order.PrescriptionImageData ? order.PrescriptionImageData : noImage}
+                                        onClick={() => setImageDialogOpen(true)}
+                                        alt='تصویر دارو/نسخه'
+                                        style={{ cursor: 'zoom-in', height: imageHeight - 32 }} />
+                                </Tooltip>
+                            </CardContent>
+                        </Card>
                     </Grid>
                 </Grid>
                 <Grid item container xs={12} className={classes.grid} spacing={2} alignItems='flex-end' justify='flex-end'>
-
                     <Grid item xs={12}>
                         {(!addedDrugs || addedDrugs.length === 0)
                             ?
@@ -286,29 +497,79 @@ export default function PackagePrepare(props) {
                                </Typography>
                             :
                             <Grid container alignItems='flex-end' style={{ textAlign: 'right' }} spacing={1}>
-                                <Grid item xs={12}>
-                                    <Typography variant='body1'>
-                                        لیست دارو های انتخاب شده
+                                <Grid item container spacing={1}>
+                                    <Grid item style={{ textAlign: 'right' }}>
+                                        <Typography variant='body1'>
+                                            لیست دارو های انتخاب شده
                                     </Typography>
+                                    </Grid>
+                                    <Grid item container style={{ textAlign: 'left' }} spacing={1}>
+                                        <Grid item>
+                                            <Button className={netDrugStyles.gradientButtonPrimary} onClick={finishPacking}>
+                                                سفارش تکمیل است
+                                            </Button>
+                                        </Grid>
+                                        <Grid item>
+                                            <Button className={netDrugStyles.gradientButtonPrimaryOutlined} component={Link} to={`/orders/${order.Id}/details`}>
+                                                بازگشت به جزئیات دارو
+                                            </Button>
+                                        </Grid>
+                                        <Grid item>
+                                            <Button className={netDrugStyles.gradientButtonPrimaryOutlined} component={Link} to={`/dashboard`}>
+                                                بازگشت به صفحه اصلی
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
                                 </Grid>
-
                                 <Grid item xs={12}>
                                     <Paper>
                                         <SimpleList data={addedDrugs}
-                                            numberAvatar={true}
+                                            //numberAvatar={true}
+                                            defaultImage={<PlaylistAddCheckRoundedIcon />}
                                             primaryText={item => item.Drug.GenericNameFarsi}
                                             secondaryText={item => (
                                                 <ul>
-                                                    <li>{`نام جنریک: ${item.Drug.GenericNameEnglish}`}</li>
-                                                    <li>{`تولید کننده: ${item.Info.Producer}`}</li>
-                                                    <li>{`تعداد: ${item.quantity || 'تعداد نامشخص!'}`}</li>
+                                                    <li><Typography variant='caption'>
+                                                        {`نام جنریک: ${item.Drug.GenericNameEnglish}`}
+                                                    </Typography></li>
+                                                    <li>
+                                                        <Typography variant='caption'>
+                                                            {`تولید کننده: ${item.Info.Producer}`}
+                                                        </Typography>
+                                                    </li>
+                                                    <li>
+                                                        <Typography variant='caption'>
+                                                            {`تعداد: ${item.Quantity || 'تعداد نامشخص!'}`}
+                                                        </Typography>
+                                                    </li>
+                                                    <li>
+                                                        <Typography variant='caption'>
+                                                            قیمت:
+                                                        <span style={{ direction: 'ltr', marginRight: '5px', marginLeft: '5px' }}>{item.Price}</span>
+                                                            x
+                                                        <span style={{ direction: 'ltr', marginRight: '5px', marginLeft: '5px' }}>{item.Quantity}</span>
+                                                            =
+                                                        <span style={{ direction: 'ltr', marginRight: '5px', marginLeft: '5px' }}>{item.Price * item.Quantity}</span>
+                                                            ریال
+                                                   </Typography>
+                                                    </li>
                                                 </ul>
                                             )}
                                             actions={[
                                                 {
                                                     label: 'حذف از لیست',
                                                     icon: <CloseIcon />,
-                                                    onClick: item => console.log('item clicked: ', item)
+                                                    //customClass:netDrugStyles.secondaryFlat,
+                                                    onClick: item => {
+                                                        let itemIndex = addedDrugs.indexOf(addedDrugs.filter(drug => drug.Drug.Id === item.Drug.Id)[0]);
+                                                        let newAddedDrugs = [];
+                                                        if (itemIndex !== -1) {
+                                                            newAddedDrugs = newAddedDrugs.concat(addedDrugs.slice(0, itemIndex));
+                                                            newAddedDrugs = newAddedDrugs.concat(addedDrugs.slice(itemIndex + 1));
+                                                            setAddedDrugs(newAddedDrugs);
+                                                            setCancelDrugSelection(true);
+                                                        }
+                                                    }
                                                 }
                                             ]}></SimpleList>
                                     </Paper>
@@ -333,25 +594,27 @@ export default function PackagePrepare(props) {
                                 onChange={(event) => {
                                     setSearchQuery(event.target.value)
                                 }}
-
+                                onKeyPress={(event) => {
+                                    if (event.charCode === ConstantValues.EnterKey) {
+                                        search();
+                                    }
+                                }}
                             />
                         </FormControl>
 
                     </Grid>
                     <Grid item xs={1} style={{ textAlign: 'right' }}>
                         <Tooltip title={canClearSearch ? 'لغو جستجو' : 'جستجو'}>
-                            <IconButton color='primary' onClick={search} onKeyPress={(event) => {
-                                if (event.charCode === 13) {
-                                    search();
-                                }
-                            }}>
+                            <IconButton color='primary' onClick={search} className={netDrugStyles.primaryFlat}>
                                 {canClearSearch ? <ClearRoundedIcon color='secondary' /> : <SearchRoundedIcon color='primary' />}
                             </IconButton>
                         </Tooltip>
                     </Grid>
                     <Grid item xs={12}>
                         <PagedTable
-                            dataId={(order) => `${order.Drug.Id}-${order.Info && order.Info.Id}`}
+                            dataId={(order) =>
+                                order.Drug ? `${order.Drug.Id}-${order.Info && order.Info.Id}`
+                                    : `${order.DrugId}-${order.CommercialInfoId}`}
                             selectable={true}
                             selectionChanged={(items => {
                                 let copyOfAddedItems = [];
@@ -360,10 +623,14 @@ export default function PackagePrepare(props) {
                                 console.log('current added: ', addedDrugs);
                                 if (items.length > addedDrugs.length) //checked
                                 {
-                                    
-                                    setCurrentSelectedItem(copyOfAddedItems.pop());
-                                    setTempSelectedItems(copyOfAddedItems);
-                                    setNumberDialogOpen(true);
+                                    let lastSelectedItem = copyOfAddedItems.pop();
+                                    if (addedDrugs.filter(drug => drug.Drug.Id === lastSelectedItem.Drug.Id).length <= 0) {
+                                        setCurrentSelectedItem(lastSelectedItem);
+                                        setTempSelectedItems(copyOfAddedItems);
+                                        setCurrentDrugCount(1);
+                                        setCurrentDrugPrice(0);
+                                        setNumberDialogOpen(true);
+                                    }
                                 }
                                 else if (items.length <= addedDrugs.length) {
                                     setAddedDrugs(copyOfAddedItems);
@@ -373,15 +640,24 @@ export default function PackagePrepare(props) {
                             headers={[
                                 {
                                     title: 'نام فارسی',
-                                    value: (order) => order.Drug.GenericNameFarsi
+                                    value: (order) => order.Drug.GenericNameFarsi,
+                                    style:{
+                                        'background' : '#A1DFFB88'
+                                    }
                                 },
                                 {
                                     title: 'نام لاتین',
-                                    value: (order) => order.Drug.GenericNameEnglish
+                                    value: (order) => order.Drug.GenericNameEnglish,
+                                    style:{
+                                        'background' : '#A1DFFB88'
+                                    }
                                 },
                                 {
                                     title: 'تولید کننده',
-                                    value: (order) => order.Info.Producer
+                                    value: (order) => order.Info.Producer,
+                                    style:{
+                                        'background' : '#A1DFFB88'
+                                    }
                                 }
                             ]}
                             pageLoader={loadDrugs}
@@ -395,33 +671,99 @@ export default function PackagePrepare(props) {
 
             </Grid>
             <Dialog open={numberDialogOpen} onClose={handleNumberDialogClose} aria-labelledby="ورود تعداد دارو">
-                <DialogTitle id="form-dialog-title">تعداد</DialogTitle>
+                <DialogTitle id="form-dialog-title">{currentSelectedItem.Drug ? currentSelectedItem.Drug.GenericNameFarsi : 'اطاعات تکمیلی'}</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        لطفا تعداد داروی مورد نظر را وارد نمایید
+                        لطفا تعداد و مبلغ داروی مورد نظر را وارد نمایید
                     </DialogContentText>
-                    <TextField
-                        autoFocus
+                    <Grid container direction='column' spacing={2}>
+                        <Grid item>
+                            <FormControl fullWidth>
+                                <TextField
+                                    autoFocus
+                                    id="quantity"
+                                    label="تعداد"
+                                    type="text"
+                                    value={currentDrugCount}
+                                    onChange={(event) => {
+                                        if (event.target.value && !isNaN(event.target.value))
+                                            setCurrentDrugCount(event.target.value)
 
-                        id="quantity"
-                        label="تعداد"
-                        type="text"
-                        fullWidth
-                        value={currentDrugCount}
-                        onChange={(event) => {
-                            if (event.target.value && !isNaN(event.target.value))
-                                setCurrentDrugCount(event.target.value)
-                        }}
-                    />
+                                    }}
+                                    onFocus={event => event.target.select()}
+                                    onKeyPress={(event) => {
+                                        console.log('key: ', event.charCode);
+                                        if (event.charCode === ConstantValues.EnterKey) //enter
+                                            handleNumberdialogConfirmation();
+                                        else if (event.charCode === ConstantValues.EscapeKey) //escape
+                                            handleNumberDialogClose();
+                                    }}
+                                />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl fullWidth>
+                                <TextField
+                                    id="price"
+                                    label="مبلغ واحد"
+                                    type="text"
+                                    value={currentDrugPrice}
+                                    onChange={(event) => {
+                                        if (event.target.value && !isNaN(event.target.value))
+                                            setCurrentDrugPrice(event.target.value)
+
+                                    }}
+                                    onFocus={event => event.target.select()}
+                                    onKeyPress={(event) => {
+                                        console.log('key: ', event.charCode);
+                                        if (event.charCode === ConstantValues.EnterKey) //enter
+                                            handleNumberdialogConfirmation();
+                                        else if (event.charCode === ConstantValues.EscapeKey) //escape
+                                            handleNumberDialogClose();
+                                    }}
+                                />
+                            </FormControl>
+                        </Grid>
+                    </Grid>
+
+
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleNumberDialogClose} color="primary">
+                    <Button onClick={handleNumberDialogClose} color="secondary">
                         انصراف
                     </Button>
                     <Button onClick={handleNumberdialogConfirmation} color="primary">
                         تایید
                     </Button>
                 </DialogActions>
+            </Dialog>
+
+            <Dialog open={imageDialogOpen} aria-labelledby="تصویر نسخه" fullWidth maxWidth="lg">
+                <DialogTitle id="form-dialog-title">
+                    <Grid container justify='space-between'>
+                        <Grid item style={{ textAlign: 'right' }}>
+                            تصویر نسخه
+                        </Grid>
+                        <Grid item style={{ textAlign: 'left' }}>
+                            <IconButton>
+                                <ClearRoundedIcon onClick={() => setImageDialogOpen(false)}></ClearRoundedIcon>
+                            </IconButton>
+                        </Grid>
+                    </Grid>
+                </DialogTitle>
+                <DialogContent>
+                    <Grid container alignItems='center' justify='center' direction='column' spacing={2}>
+                        <Grid item>
+                            <img src={order.PrescriptionImageData ? order.PrescriptionImageData : noImage}
+                                onClick={() => setImageDialogOpen(false)}
+                                alt='تصویر دارو/نسخه' height='480px'
+                                style={{ cursor: 'zoom-out' }} />
+                        </Grid>
+                    </Grid>
+
+
+                </DialogContent>
+
             </Dialog>
 
         </div>

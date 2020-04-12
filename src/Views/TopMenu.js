@@ -43,7 +43,7 @@ export default function TopMenu() {
         const abortSignal = abortController.signal;
 
         AuthHelper.GetUserInfo(abortSignal).then(result => {
-            console.log('user data: ', result);
+           
             setUserInfo(result);
         });
         //useEffect's cleanup

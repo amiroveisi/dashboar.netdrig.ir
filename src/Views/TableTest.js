@@ -57,7 +57,7 @@ export default function TableTest() {
                 <PagedTable
                     dataIdPropName='Id'
                     selectable={true}
-                    selectionChanged={(items=>console.log('selecteds: ', items))}
+                    // selectionChanged={(items=>console.log('selecteds: ', items))}
                     rowsPerPageOptions={[10, 25, 50, 100]}
                     headers={[
                         {

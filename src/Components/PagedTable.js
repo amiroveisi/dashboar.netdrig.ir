@@ -140,16 +140,17 @@ export default function PagedTable(props) {
 
     const handleChangePage = (event, newPage, numberOfRows) => {
         pageLoader(newPage + 1, numberOfRows, query).then(result => {
-            setRows(result.data);
-            setPage(newPage);
-            setTotalCount(result.totalCount);
-            if (initialSelectedItems) {
-                setSelectedItems(initialSelectedItems);
-                if (initialSelectedItemsCallback)
-                    initialSelectedItemsCallback();
+            if (result) {
+                setRows(result.data);
+                setPage(newPage);
+                setTotalCount(result.totalCount);
+                if (initialSelectedItems) {
+                    setSelectedItems(initialSelectedItems);
+                    if (initialSelectedItemsCallback)
+                        initialSelectedItemsCallback();
+                }
+                
             }
-            console.log('init items: ', initialSelectedItems);
-            console.log('internal selected items: ', selectedItems);
         })
     };
 
@@ -178,7 +179,7 @@ export default function PagedTable(props) {
 
         let isSelected = selectedItems && selectedItems.filter(item => dataId(item) === dataId(row)).length > 0;
         if (isSelected)
-            console.log('selected: ', row);
+            // console.log('selected: ', row);
         return isSelected;
     }
     if (!rows) {

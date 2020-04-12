@@ -33,6 +33,7 @@ import ExpandMoreRoundedIcon from '@material-ui/icons/ExpandMoreRounded';
 import ExpandLessRoundedIcon from '@material-ui/icons/ExpandLessRounded';
 import Collapsible from 'react-collapsible';
 import PlaylistAddCheckRoundedIcon from '@material-ui/icons/PlaylistAddCheckRounded';
+import * as drugStoreHelper from '../../Helpers/DrugStoreHelper';
 const useStyles = makeStyles(theme => ({
     root: {
         flexGrow: 1,
@@ -61,6 +62,9 @@ export default function PackagePrepare(props) {
     const [numberDialogOpen, setNumberDialogOpen] = useState(false);
     const [currentDrugCount, setCurrentDrugCount] = useState(1);
     const [currentDrugPrice, setCurrentDrugPrice] = useState(0);
+    const [currentDrugInsuranceShare, setCurrentDrugInsuranceShare] = useState(0);
+    const [currentDrugOrganizationShare, setCurrentDrugOrganizationShare] = useState(0);
+    const [currentDrugDifferenceValue, setCurrentDrugDifferenceValue] = useState(0);
     const pagedTableRef = useRef();
     const [tempSelectedItems, setTempSelectedItems] = useState([]);
     const [currentSelectedItem, setCurrentSelectedItem] = useState({});
@@ -83,7 +87,7 @@ export default function PackagePrepare(props) {
     const loadDrugs = async function (page, rowsInPage) {
         try {
 
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/crawler/drug/getpaged?pagenumber=${page}&rowsinpage=${rowsInPage}&query=${searchQuery}`,
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/crawler/drug/getpaged?pagenumber=${page}&rowsinpage=${rowsInPage}&query=${searchQuery}&drugstoreid=${drugStoreHelper.getDrugStoreId()}`,
                 {
                     method: "GET",
                     headers: {
@@ -251,6 +255,9 @@ export default function PackagePrepare(props) {
         let tempCurrentItem = currentSelectedItem;
         tempCurrentItem.Quantity = currentDrugCount;
         tempCurrentItem.Price = currentDrugPrice;
+        tempCurrentItem.InuranceShare = currentDrugInsuranceShare;
+        tempCurrentItem.OrganizationShare = currentDrugOrganizationShare;
+        tempCurrentItem.DifferenceValue = currentDrugDifferenceValue;
         setCurrentSelectedItem(tempCurrentItem);
         let copyOfTempSelectedItems = [];
         copyOfTempSelectedItems = copyOfTempSelectedItems.concat(tempSelectedItems);
@@ -619,8 +626,8 @@ export default function PackagePrepare(props) {
                             selectionChanged={(items => {
                                 let copyOfAddedItems = [];
                                 copyOfAddedItems = copyOfAddedItems.concat(items);
-                                console.log('items: ', items);
-                                console.log('current added: ', addedDrugs);
+                                // console.log('items: ', items);
+                                // console.log('current added: ', addedDrugs);
                                 if (items.length > addedDrugs.length) //checked
                                 {
                                     let lastSelectedItem = copyOfAddedItems.pop();
@@ -674,7 +681,7 @@ export default function PackagePrepare(props) {
                 <DialogTitle id="form-dialog-title">{currentSelectedItem.Drug ? currentSelectedItem.Drug.GenericNameFarsi : 'اطاعات تکمیلی'}</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        لطفا تعداد و مبلغ داروی مورد نظر را وارد نمایید
+                        لطفا اطلاعات زیر را تکمیل کنید:
                     </DialogContentText>
                     <Grid container direction='column' spacing={2}>
                         <Grid item>
@@ -692,7 +699,7 @@ export default function PackagePrepare(props) {
                                     }}
                                     onFocus={event => event.target.select()}
                                     onKeyPress={(event) => {
-                                        console.log('key: ', event.charCode);
+                                        // //console.log('key: ', event.charCode);
                                         if (event.charCode === ConstantValues.EnterKey) //enter
                                             handleNumberdialogConfirmation();
                                         else if (event.charCode === ConstantValues.EscapeKey) //escape
@@ -715,7 +722,76 @@ export default function PackagePrepare(props) {
                                     }}
                                     onFocus={event => event.target.select()}
                                     onKeyPress={(event) => {
-                                        console.log('key: ', event.charCode);
+                                        // //console.log('key: ', event.charCode);
+                                        if (event.charCode === ConstantValues.EnterKey) //enter
+                                            handleNumberdialogConfirmation();
+                                        else if (event.charCode === ConstantValues.EscapeKey) //escape
+                                            handleNumberDialogClose();
+                                    }}
+                                />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl fullWidth>
+                                <TextField
+                                    id="insuranceShare"
+                                    label="سهم بیمه"
+                                    type="text"
+                                    value={currentDrugInsuranceShare}
+                                    onChange={(event) => {
+                                        if (event.target.value && !isNaN(event.target.value))
+                                            setCurrentDrugInsuranceShare(event.target.value)
+
+                                    }}
+                                    onFocus={event => event.target.select()}
+                                    onKeyPress={(event) => {
+                                        // //console.log('key: ', event.charCode);
+                                        if (event.charCode === ConstantValues.EnterKey) //enter
+                                            handleNumberdialogConfirmation();
+                                        else if (event.charCode === ConstantValues.EscapeKey) //escape
+                                            handleNumberDialogClose();
+                                    }}
+                                />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl fullWidth>
+                                <TextField
+                                    id="organizationShare"
+                                    label="سهم سازمان"
+                                    type="text"
+                                    value={currentDrugOrganizationShare}
+                                    onChange={(event) => {
+                                        if (event.target.value && !isNaN(event.target.value))
+                                            setCurrentDrugOrganizationShare(event.target.value)
+
+                                    }}
+                                    onFocus={event => event.target.select()}
+                                    onKeyPress={(event) => {
+                                        // console.log('key: ', event.charCode);
+                                        if (event.charCode === ConstantValues.EnterKey) //enter
+                                            handleNumberdialogConfirmation();
+                                        else if (event.charCode === ConstantValues.EscapeKey) //escape
+                                            handleNumberDialogClose();
+                                    }}
+                                />
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <FormControl fullWidth>
+                                <TextField
+                                    id="differenceValue"
+                                    label="اضافه مبلغ"
+                                    type="text"
+                                    value={currentDrugDifferenceValue}
+                                    onChange={(event) => {
+                                        if (event.target.value && !isNaN(event.target.value))
+                                            setCurrentDrugDifferenceValue(event.target.value)
+
+                                    }}
+                                    onFocus={event => event.target.select()}
+                                    onKeyPress={(event) => {
+                                        // console.log('key: ', event.charCode);
                                         if (event.charCode === ConstantValues.EnterKey) //enter
                                             handleNumberdialogConfirmation();
                                         else if (event.charCode === ConstantValues.EscapeKey) //escape

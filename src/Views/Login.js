@@ -13,6 +13,7 @@ import * as ConstantValues from '../Helpers/ConstantValues';
 import { useSnackbar } from 'notistack';
 import * as AuthHelper from '../Helpers/AuthHelper';
 import useNetDrugStyles from '../Components/Styles';
+import * as drugStoreHelper from '../Helpers/DrugStoreHelper';
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -41,9 +42,48 @@ export default function Login() {
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [drugStoreId, setDrugStoreId] = useState(null);
     const { enqueueSnackbar } = useSnackbar();
     const netDrugStyles = useNetDrugStyles();
-    const handleLogin = async () => {
+    const getUserDrugStore = async function () {
+        try {
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/drugstore/userdrugstore`,
+                {
+                    method: "GET",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${AuthHelper.GetAuthToken()}`
+                    }
+                });
+            if (!response) {
+                enqueueSnackbar(`خطایی رخ داده است. ${response.status} ${response.statusText}`, { variant: 'error' });
+            }
+            else {
+                try {
+                    const data = await response.json();
+                    if (data && data.Data) {
+                        setDrugStoreId(data.Data.Id);
+                        return data;
+                    }
+                    else {
+                        setDrugStoreId('none');
+                    }
+                } catch (error) {
+                    setDrugStoreId('none');
+                    enqueueSnackbar("خطا در دریافت برخی اطلاعات از سرور", { variant: 'error' });
+                }
+            }
+            return false;
+        } catch (error) {
+            console.log(error);
+            setDrugStoreId('none');
+            if (error == 'TypeError: Failed to fetch') {
+                enqueueSnackbar('خطا در برقراری ارتباط با سرور. لطفا ارتباط اینترنتی خود را بررسی کنید', { variant: 'error' });
+            }
+            return false;
+        }
+    };
+    const login = async () => {
         setIsLoading(true);
         try {
             const response = await fetch(`${ConstantValues.WebApiBaseUrl}/oauth2/token`,
@@ -66,6 +106,7 @@ export default function Login() {
                         AuthHelper.LoggedIn(data.access_token);
                         setIsLoading(false);
                         setIsLoggedIn(true);
+                        return true;
                     }
                     else {
                         setIsLoading(false);
@@ -77,16 +118,24 @@ export default function Login() {
                 }
             }
 
+            return false;
         } catch (error) {
             console.log(error);
             if (error == 'TypeError: Failed to fetch') {
                 setIsLoading(false);
                 enqueueSnackbar('خطا در برقراری ارتباط با سرور. لطفا ارتباط اینترنتی خود را بررسی کنید', { variant: 'error' });
             }
+            return false;
         }
+    };
+
+    if (isLoggedIn && !drugStoreId) //if is logged in but not tried to get drug store id
+    {
+        getUserDrugStore();
     }
-   
-    if (isLoggedIn) {
+    if (isLoggedIn && drugStoreId) //if is logged in and have got drug store id (or at least tried to and got nothing!)
+    {
+        drugStoreHelper.setDrugStoreId(drugStoreId);
         document.location.href = '/';
     }
 
@@ -126,9 +175,11 @@ export default function Login() {
                             </FormControl>
                         </Grid>
                         <Grid item alignItems="stretch">
-                            <Button className={netDrugStyles.gradientButtonPrimary} fullWidth variant="contained" disabled={isLoading} color="primary" startIcon={<KeyIcon />} onClick={handleLogin}>
+                            <Button className={netDrugStyles.gradientButtonPrimary} fullWidth variant="contained"
+                                disabled={isLoading} color="primary" startIcon={<KeyIcon />} onClick={login}>
                                 ورود
                                 </Button>
+
                         </Grid>
                         <Grid item alignItems="stretch">
                             <Typography style={{ marginTop: '10px', fontSize: '12px' }}>

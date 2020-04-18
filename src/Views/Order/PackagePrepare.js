@@ -5,11 +5,11 @@ import EventIcon from '@material-ui/icons/Event';
 import LocalOfferIcon from '@material-ui/icons/LocalOffer';
 import BusinessCenterIcon from '@material-ui/icons/BusinessCenter';
 import ScheduleIcon from '@material-ui/icons/Schedule';
-import { grey, blue } from '@material-ui/core/colors';
-import InfoCard from '../../Components/InfoCard';
 import LocationOnRoundedIcon from '@material-ui/icons/LocationOnRounded';
 import PersonRoundedIcon from '@material-ui/icons/PersonRounded';
 import AssignmentRoundedIcon from '@material-ui/icons/AssignmentRounded';
+import EditIcon from '@material-ui/icons/Edit';
+import PostAddIcon from '@material-ui/icons/PostAdd';
 import noImage from '../../Assets/Images/no-image.jpg';
 import { useSnackbar } from 'notistack';
 import * as ConstantValues from '../../Helpers/ConstantValues';
@@ -27,8 +27,6 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import useNetDrugStyles from '../../Components/Styles';
-import ArrowLeftRoundedIcon from '@material-ui/icons/ArrowLeftRounded';
-import ReciepCard from '../../Components/ReciepCard';
 import ExpandMoreRoundedIcon from '@material-ui/icons/ExpandMoreRounded';
 import ExpandLessRoundedIcon from '@material-ui/icons/ExpandLessRounded';
 import Collapsible from 'react-collapsible';
@@ -42,7 +40,11 @@ const useStyles = makeStyles(theme => ({
     grid: {
         padding: theme.spacing(2),
 
-    }
+    },
+    dialogPaper: {
+
+        height: '400px'
+    },
 }));
 const Link = React.forwardRef((props, ref) => (
     <RouterLink innerRef={ref} {...props} />
@@ -62,8 +64,9 @@ export default function PackagePrepare(props) {
     const [numberDialogOpen, setNumberDialogOpen] = useState(false);
     const [currentDrugCount, setCurrentDrugCount] = useState(1);
     const [currentDrugPrice, setCurrentDrugPrice] = useState(0);
+    const [currentDrugGenericCode, setCurrentDrugGenericCode] = useState('');
     const [currentDrugInsuranceShare, setCurrentDrugInsuranceShare] = useState(0);
-    const [currentDrugOrganizationShare, setCurrentDrugOrganizationShare] = useState(0);
+    const [currentDrugPatientShare, setCurrentDrugPatientShare] = useState(0);
     const [currentDrugDifferenceValue, setCurrentDrugDifferenceValue] = useState(0);
     const pagedTableRef = useRef();
     const [tempSelectedItems, setTempSelectedItems] = useState([]);
@@ -204,7 +207,11 @@ export default function PackagePrepare(props) {
                         Quantity: drug.Quantity,
                         Producer: drug.Info.Producer,
                         CommercialInfoId: drug.Info.Id,
-                        DrugId: drug.Drug.Id
+                        DrugId: drug.Drug.Id,
+                        InsuranceShare: drug.InuranceShare,
+                        PatientShare: drug.PatientShare,
+                        GenericCode: drug.GenericCode,
+                        DifferenceValue: drug.DifferenceValue
                     })))
                 });
             if (!response) {
@@ -256,13 +263,25 @@ export default function PackagePrepare(props) {
         tempCurrentItem.Quantity = currentDrugCount;
         tempCurrentItem.Price = currentDrugPrice;
         tempCurrentItem.InuranceShare = currentDrugInsuranceShare;
-        tempCurrentItem.OrganizationShare = currentDrugOrganizationShare;
+        tempCurrentItem.PatientShare = currentDrugPatientShare;
         tempCurrentItem.DifferenceValue = currentDrugDifferenceValue;
+        tempCurrentItem.GenericCode = currentDrugGenericCode;
         setCurrentSelectedItem(tempCurrentItem);
-        let copyOfTempSelectedItems = [];
-        copyOfTempSelectedItems = copyOfTempSelectedItems.concat(tempSelectedItems);
-        copyOfTempSelectedItems.push(currentSelectedItem);
-        setAddedDrugs(copyOfTempSelectedItems);
+        //get all added drugs except the one that is being editet (if there was any)
+        let filteredItems = addedDrugs.filter(item => item.Drug.Id !== currentSelectedItem.Drug.Id
+            || (item.Drug.Id === currentSelectedItem.Drug.Id && item.Info.Id !== currentSelectedItem.Info.Id));
+        //if drug is being edited
+        if (filteredItems.length < addedDrugs.length) {
+            filteredItems = filteredItems.concat(tempCurrentItem);
+            setAddedDrugs(filteredItems);
+        }
+        //if drug is added
+        else {
+
+            let copyOfTempSelectedItems = addedDrugs;
+            copyOfTempSelectedItems = copyOfTempSelectedItems.concat(tempSelectedItems);
+            setAddedDrugs(copyOfTempSelectedItems);
+        }
     }
     if (unauthorized) {
         return (
@@ -276,18 +295,7 @@ export default function PackagePrepare(props) {
     if (packageCreatedSuccessfuly) {
         return (<Redirect to='/orders' />);
     }
-    const infoCardsBreakPoints = {
-        xs: 12,
-        sm: 6,
-        md: 3,
-
-    };
-    const orderInfoData = (
-        <React.Fragment>
-            {order.CustomerFullName} <br />
-            {order.CreatedOn}
-        </React.Fragment>
-    )
+   
     const infoHeaderClosedState = (
         <Card id='infoCard'>
             <CardContent>
@@ -518,7 +526,7 @@ export default function PackagePrepare(props) {
                                         </Grid>
                                         <Grid item>
                                             <Button className={netDrugStyles.gradientButtonPrimaryOutlined} component={Link} to={`/orders/${order.Id}/details`}>
-                                                بازگشت به جزئیات دارو
+                                                بازگشت به جزئیات سفارش
                                             </Button>
                                         </Grid>
                                         <Grid item>
@@ -560,6 +568,18 @@ export default function PackagePrepare(props) {
                                                             ریال
                                                    </Typography>
                                                     </li>
+                                                    <li>
+                                                        <Typography variant='caption'>
+                                                            {`سهم بیمه: ${item.InuranceShare || 'نامشخص'}`}
+                                                        </Typography>
+                                                    </li>
+                                                    <li>
+                                                        <Typography variant='caption'>
+                                                            {`سهم سازمان: ${item.PatientShare || 'نامشخص'}`}
+                                                        </Typography>
+                                                    </li>
+
+
                                                 </ul>
                                             )}
                                             actions={[
@@ -568,13 +588,34 @@ export default function PackagePrepare(props) {
                                                     icon: <CloseIcon />,
                                                     //customClass:netDrugStyles.secondaryFlat,
                                                     onClick: item => {
-                                                        let itemIndex = addedDrugs.indexOf(addedDrugs.filter(drug => drug.Drug.Id === item.Drug.Id)[0]);
+                                                        let itemIndex = addedDrugs.indexOf(addedDrugs.filter(drug => drug.Drug.Id === item.Drug.Id
+                                                            && drug.Info.Id === item.Info.Id)[0]);
                                                         let newAddedDrugs = [];
                                                         if (itemIndex !== -1) {
                                                             newAddedDrugs = newAddedDrugs.concat(addedDrugs.slice(0, itemIndex));
                                                             newAddedDrugs = newAddedDrugs.concat(addedDrugs.slice(itemIndex + 1));
                                                             setAddedDrugs(newAddedDrugs);
                                                             setCancelDrugSelection(true);
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    label: 'ویرایش',
+                                                    icon: < EditIcon />,
+                                                    //customClass:netDrugStyles.secondaryFlat,
+                                                    onClick: item => {
+                                                        let itemIndex = addedDrugs.indexOf(addedDrugs.filter(drug => drug.Drug.Id === item.Drug.Id
+                                                            && drug.Info.Id === item.Info.Id)[0]);
+                                                        let newAddedDrugs = [];
+                                                        if (itemIndex !== -1) {
+                                                            setCurrentSelectedItem(item);
+                                                            setCurrentDrugCount(item.Quantity);
+                                                            setCurrentDrugPrice(item.Price);
+                                                            setCurrentDrugDifferenceValue(item.DifferenceValue);
+                                                            setCurrentDrugGenericCode(item.GenericCode);
+                                                            setCurrentDrugInsuranceShare(item.InsuranceShare);
+                                                            setCurrentDrugPatientShare(item.PatientShare);
+                                                            setNumberDialogOpen(true);
                                                         }
                                                     }
                                                 }
@@ -622,48 +663,76 @@ export default function PackagePrepare(props) {
                             dataId={(order) =>
                                 order.Drug ? `${order.Drug.Id}-${order.Info && order.Info.Id}`
                                     : `${order.DrugId}-${order.CommercialInfoId}`}
-                            selectable={true}
-                            selectionChanged={(items => {
-                                let copyOfAddedItems = [];
-                                copyOfAddedItems = copyOfAddedItems.concat(items);
-                                // console.log('items: ', items);
-                                // console.log('current added: ', addedDrugs);
-                                if (items.length > addedDrugs.length) //checked
-                                {
-                                    let lastSelectedItem = copyOfAddedItems.pop();
-                                    if (addedDrugs.filter(drug => drug.Drug.Id === lastSelectedItem.Drug.Id).length <= 0) {
-                                        setCurrentSelectedItem(lastSelectedItem);
-                                        setTempSelectedItems(copyOfAddedItems);
-                                        setCurrentDrugCount(1);
-                                        setCurrentDrugPrice(0);
-                                        setNumberDialogOpen(true);
-                                    }
-                                }
-                                else if (items.length <= addedDrugs.length) {
-                                    setAddedDrugs(copyOfAddedItems);
-                                }
-                            })}
+                            selectable={false}
                             rowsPerPageOptions={[4, 25, 50, 100]}
                             headers={[
                                 {
+                                    title: 'عملیات',
+                                    value: (row) => {
+                                        return (<Button className={netDrugStyles.gradientCircleButtonPrimary}
+                                            onClick={() => {
+                                                if (addedDrugs.filter(drug => drug.Drug.Id === row.Drug.Id
+                                                    && drug.Info.Id === row.Info.Id).length <= 0) {
+                                                    let copyOfAddedItems = [];
+                                                    copyOfAddedItems = copyOfAddedItems.concat([row]);
+                                                    setCurrentSelectedItem(row);
+                                                    setTempSelectedItems(copyOfAddedItems);
+                                                    setCurrentDrugCount(1);
+                                                    setCurrentDrugPrice(0);
+                                                    setCurrentDrugDifferenceValue(0);
+                                                    setCurrentDrugGenericCode('');
+                                                    setCurrentDrugInsuranceShare(0);
+                                                    setCurrentDrugPatientShare(0);
+                                                    setNumberDialogOpen(true);
+                                                }
+                                                else {
+                                                    enqueueSnackbar('این دارو قبلا اضافه شده است');
+                                                }
+                                            }} >
+
+                                            <Tooltip title="افزودن به نسخه">
+                                                <PostAddIcon />
+                                            </Tooltip>
+                                        </Button>);
+                                    },
+                                    style: {
+                                        'background': '#A1DFFB88'
+                                    },
+                                    isAction: true
+                                },
+                                {
                                     title: 'نام فارسی',
                                     value: (order) => order.Drug.GenericNameFarsi,
-                                    style:{
-                                        'background' : '#A1DFFB88'
+                                    style: {
+                                        'background': '#A1DFFB88'
                                     }
                                 },
                                 {
                                     title: 'نام لاتین',
                                     value: (order) => order.Drug.GenericNameEnglish,
-                                    style:{
-                                        'background' : '#A1DFFB88'
+                                    style: {
+                                        'background': '#A1DFFB88'
                                     }
                                 },
                                 {
                                     title: 'تولید کننده',
                                     value: (order) => order.Info.Producer,
-                                    style:{
-                                        'background' : '#A1DFFB88'
+                                    style: {
+                                        'background': '#A1DFFB88'
+                                    }
+                                },
+                                {
+                                    title: 'کد اختصاصی',
+                                    value: (order) => order.PriceSettings ? order.PriceSettings.Code : '',
+                                    style: {
+                                        'background': '#A1DFFB88'
+                                    }
+                                },
+                                {
+                                    title: 'کد جنریک',
+                                    value: (order) => order.PriceSettings ? order.PriceSettings.GenericCode : '',
+                                    style: {
+                                        'background': '#A1DFFB88'
                                     }
                                 }
                             ]}
@@ -677,128 +746,181 @@ export default function PackagePrepare(props) {
                 </Grid>
 
             </Grid>
-            <Dialog open={numberDialogOpen} onClose={handleNumberDialogClose} aria-labelledby="ورود تعداد دارو">
+            <Dialog open={numberDialogOpen} onClose={handleNumberDialogClose} aria-labelledby="تکمیل اطلاعات سفارش"
+                classes={{ paper: classes.dialogPaper }} >
                 <DialogTitle id="form-dialog-title">{currentSelectedItem.Drug ? currentSelectedItem.Drug.GenericNameFarsi : 'اطاعات تکمیلی'}</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
                         لطفا اطلاعات زیر را تکمیل کنید:
                     </DialogContentText>
-                    <Grid container direction='column' spacing={2}>
-                        <Grid item>
-                            <FormControl fullWidth>
-                                <TextField
-                                    autoFocus
-                                    id="quantity"
-                                    label="تعداد"
-                                    type="text"
-                                    value={currentDrugCount}
-                                    onChange={(event) => {
-                                        if (event.target.value && !isNaN(event.target.value))
-                                            setCurrentDrugCount(event.target.value)
+                    <Grid container direction='row' spacing={2}>
+                        <Grid container md={6} spacing={1}>
+                            <Grid item>
+                                <FormControl fullWidth>
+                                    <TextField
+                                        autoFocus
+                                        id="quantity"
+                                        label="تعداد"
+                                        type="text"
+                                        value={currentDrugCount}
+                                        onChange={(event) => {
+                                            if (event.target.value && !isNaN(event.target.value))
+                                                setCurrentDrugCount(event.target.value)
 
-                                    }}
-                                    onFocus={event => event.target.select()}
-                                    onKeyPress={(event) => {
-                                        // //console.log('key: ', event.charCode);
-                                        if (event.charCode === ConstantValues.EnterKey) //enter
-                                            handleNumberdialogConfirmation();
-                                        else if (event.charCode === ConstantValues.EscapeKey) //escape
-                                            handleNumberDialogClose();
-                                    }}
-                                />
-                            </FormControl>
+                                        }}
+                                        onFocus={event => event.target.select()}
+                                        onKeyPress={(event) => {
+                                            // //console.log('key: ', event.charCode);
+                                            if (event.charCode === ConstantValues.EnterKey) //enter
+                                                handleNumberdialogConfirmation();
+                                            else if (event.charCode === ConstantValues.EscapeKey) //escape
+                                                handleNumberDialogClose();
+                                        }}
+                                    />
+                                </FormControl>
+                            </Grid>
+                            <Grid item>
+                                <FormControl fullWidth>
+                                    <TextField
+                                        id="price"
+                                        label="مبلغ واحد"
+                                        type="text"
+                                        value={currentDrugPrice}
+                                        onChange={(event) => {
+                                            if (event.target.value && !isNaN(event.target.value))
+                                                setCurrentDrugPrice(event.target.value)
+
+                                        }}
+                                        onFocus={event => event.target.select()}
+                                        onKeyPress={(event) => {
+                                            // //console.log('key: ', event.charCode);
+                                            if (event.charCode === ConstantValues.EnterKey) //enter
+                                                handleNumberdialogConfirmation();
+                                            else if (event.charCode === ConstantValues.EscapeKey) //escape
+                                                handleNumberDialogClose();
+                                        }}
+                                    />
+                                </FormControl>
+                            </Grid>
+                            <Grid item>
+                                <FormControl fullWidth>
+                                    <TextField
+                                        id="insuranceShare"
+                                        label="سهم بیمه"
+                                        type="text"
+                                        value={currentDrugInsuranceShare}
+                                        onChange={(event) => {
+                                            if (event.target.value && !isNaN(event.target.value))
+                                                setCurrentDrugInsuranceShare(event.target.value)
+
+                                        }}
+                                        onFocus={event => event.target.select()}
+                                        onKeyPress={(event) => {
+                                            // //console.log('key: ', event.charCode);
+                                            if (event.charCode === ConstantValues.EnterKey) //enter
+                                                handleNumberdialogConfirmation();
+                                            else if (event.charCode === ConstantValues.EscapeKey) //escape
+                                                handleNumberDialogClose();
+                                        }}
+                                    />
+                                </FormControl>
+                            </Grid>
+
                         </Grid>
-                        <Grid item>
-                            <FormControl fullWidth>
-                                <TextField
-                                    id="price"
-                                    label="مبلغ واحد"
-                                    type="text"
-                                    value={currentDrugPrice}
-                                    onChange={(event) => {
-                                        if (event.target.value && !isNaN(event.target.value))
-                                            setCurrentDrugPrice(event.target.value)
+                        <Grid container md={6} spacing={1}>
+                            <Grid item>
+                                <FormControl fullWidth>
+                                    <TextField
+                                        id="PatientShare"
+                                        label="سهم بیمار"
+                                        type="text"
+                                        value={currentDrugPatientShare}
+                                        onChange={(event) => {
+                                            if (event.target.value && !isNaN(event.target.value))
+                                                setCurrentDrugPatientShare(event.target.value)
 
-                                    }}
-                                    onFocus={event => event.target.select()}
-                                    onKeyPress={(event) => {
-                                        // //console.log('key: ', event.charCode);
-                                        if (event.charCode === ConstantValues.EnterKey) //enter
-                                            handleNumberdialogConfirmation();
-                                        else if (event.charCode === ConstantValues.EscapeKey) //escape
-                                            handleNumberDialogClose();
-                                    }}
-                                />
-                            </FormControl>
-                        </Grid>
-                        <Grid item>
-                            <FormControl fullWidth>
-                                <TextField
-                                    id="insuranceShare"
-                                    label="سهم بیمه"
-                                    type="text"
-                                    value={currentDrugInsuranceShare}
-                                    onChange={(event) => {
-                                        if (event.target.value && !isNaN(event.target.value))
-                                            setCurrentDrugInsuranceShare(event.target.value)
+                                        }}
+                                        onFocus={event => event.target.select()}
+                                        onKeyPress={(event) => {
+                                            // console.log('key: ', event.charCode);
+                                            if (event.charCode === ConstantValues.EnterKey) //enter
+                                                handleNumberdialogConfirmation();
+                                            else if (event.charCode === ConstantValues.EscapeKey) //escape
+                                                handleNumberDialogClose();
+                                        }}
+                                    />
+                                </FormControl>
+                            </Grid>
+                            <Grid item>
+                                <FormControl fullWidth>
+                                    <TextField
+                                        id="DifferenceValue"
+                                        label="اختلاف قیمت دارو با قیمت پایه ای"
+                                        type="text"
+                                        value={currentDrugDifferenceValue}
+                                        onChange={(event) => {
+                                            if (event.target.value && !isNaN(event.target.value))
+                                                setCurrentDrugDifferenceValue(event.target.value)
 
-                                    }}
-                                    onFocus={event => event.target.select()}
-                                    onKeyPress={(event) => {
-                                        // //console.log('key: ', event.charCode);
-                                        if (event.charCode === ConstantValues.EnterKey) //enter
-                                            handleNumberdialogConfirmation();
-                                        else if (event.charCode === ConstantValues.EscapeKey) //escape
-                                            handleNumberDialogClose();
-                                    }}
-                                />
-                            </FormControl>
-                        </Grid>
-                        <Grid item>
-                            <FormControl fullWidth>
-                                <TextField
-                                    id="organizationShare"
-                                    label="سهم سازمان"
-                                    type="text"
-                                    value={currentDrugOrganizationShare}
-                                    onChange={(event) => {
-                                        if (event.target.value && !isNaN(event.target.value))
-                                            setCurrentDrugOrganizationShare(event.target.value)
+                                        }}
+                                        onFocus={event => event.target.select()}
+                                        onKeyPress={(event) => {
+                                            // console.log('key: ', event.charCode);
+                                            if (event.charCode === ConstantValues.EnterKey) //enter
+                                                handleNumberdialogConfirmation();
+                                            else if (event.charCode === ConstantValues.EscapeKey) //escape
+                                                handleNumberDialogClose();
+                                        }}
+                                    />
+                                </FormControl>
+                            </Grid>
+                            <Grid item>
+                                <FormControl fullWidth>
+                                    <TextField
+                                        id="differenceValue"
+                                        label="اضافه مبلغ"
+                                        type="text"
+                                        value={currentDrugDifferenceValue}
+                                        onChange={(event) => {
+                                            if (event.target.value && !isNaN(event.target.value))
+                                                setCurrentDrugDifferenceValue(event.target.value)
 
-                                    }}
-                                    onFocus={event => event.target.select()}
-                                    onKeyPress={(event) => {
-                                        // console.log('key: ', event.charCode);
-                                        if (event.charCode === ConstantValues.EnterKey) //enter
-                                            handleNumberdialogConfirmation();
-                                        else if (event.charCode === ConstantValues.EscapeKey) //escape
-                                            handleNumberDialogClose();
-                                    }}
-                                />
-                            </FormControl>
-                        </Grid>
-                        <Grid item>
-                            <FormControl fullWidth>
-                                <TextField
-                                    id="differenceValue"
-                                    label="اضافه مبلغ"
-                                    type="text"
-                                    value={currentDrugDifferenceValue}
-                                    onChange={(event) => {
-                                        if (event.target.value && !isNaN(event.target.value))
-                                            setCurrentDrugDifferenceValue(event.target.value)
+                                        }}
+                                        onFocus={event => event.target.select()}
+                                        onKeyPress={(event) => {
+                                            // console.log('key: ', event.charCode);
+                                            if (event.charCode === ConstantValues.EnterKey) //enter
+                                                handleNumberdialogConfirmation();
+                                            else if (event.charCode === ConstantValues.EscapeKey) //escape
+                                                handleNumberDialogClose();
+                                        }}
+                                    />
+                                </FormControl>
+                            </Grid>
+                            <Grid item>
+                                <FormControl fullWidth>
+                                    <TextField
+                                        id="genericCode"
+                                        label="کد جنریک"
+                                        type="text"
+                                        value={currentDrugGenericCode}
+                                        onChange={(event) => {
+                                            if (event.target.value && !isNaN(event.target.value))
+                                                setCurrentDrugGenericCode(event.target.value)
 
-                                    }}
-                                    onFocus={event => event.target.select()}
-                                    onKeyPress={(event) => {
-                                        // console.log('key: ', event.charCode);
-                                        if (event.charCode === ConstantValues.EnterKey) //enter
-                                            handleNumberdialogConfirmation();
-                                        else if (event.charCode === ConstantValues.EscapeKey) //escape
-                                            handleNumberDialogClose();
-                                    }}
-                                />
-                            </FormControl>
+                                        }}
+                                        onFocus={event => event.target.select()}
+                                        onKeyPress={(event) => {
+                                            // console.log('key: ', event.charCode);
+                                            if (event.charCode === ConstantValues.EnterKey) //enter
+                                                handleNumberdialogConfirmation();
+                                            else if (event.charCode === ConstantValues.EscapeKey) //escape
+                                                handleNumberDialogClose();
+                                        }}
+                                    />
+                                </FormControl>
+                            </Grid>
+
                         </Grid>
                     </Grid>
 

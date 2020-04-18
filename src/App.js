@@ -43,31 +43,35 @@ function App() {
   return (
     <RTL>
       <ThemeProvider theme={theme}>
-        <SnackbarProvider>
-            <div className="App">
-              <body>
-                <BrowserRouter>
-                  <TopMenu />
+        <SnackbarProvider
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'center',
+          }}>
+          <div className="App">
+            <body>
+              <BrowserRouter>
+                <TopMenu />
                 <Switch>
-                <Route path='/test' component={GradientBtn} />
+                  <Route path='/test' component={GradientBtn} />
                   <Route path='/orders/waitingforcustomer' component={OrdersWaitingCustomerConfirmation} />
                   <Route path='/orders/readytodelivery' component={OrdersReadyToDelivery} />
                   <Route path='/orders/:orderId/prepare' component={PackagePrepare} />
                   <Route path='/orders/:orderId/details' component={OrderDetails} />
-                  
-                    <Route path='/dashboard' component={Dashboard} />
-                    <Route path='/login' component={Login} />
-                    <Route path='/drugstore/all' component={DrugStoresIndex} />
-                    <Route path='/drugstore/new' component={NewDrugStore} />
-                    <Route path='/drugstore/edit/:drugStoreId' component={EditDrugStore} />
-                    
-                    <Route path='/' component={Dashboard} />
+
+                  <Route path='/dashboard' component={Dashboard} />
+                  <Route path='/login' component={Login} />
+                  <Route path='/drugstore/all' component={DrugStoresIndex} />
+                  <Route path='/drugstore/new' component={NewDrugStore} />
+                  <Route path='/drugstore/edit/:drugStoreId' component={EditDrugStore} />
+
+                  <Route path='/' component={Dashboard} />
 
 
-                  </Switch>
-                </BrowserRouter>
-              </body>
-            </div>
+                </Switch>
+              </BrowserRouter>
+            </body>
+          </div>
         </SnackbarProvider>
       </ThemeProvider>
     </RTL>

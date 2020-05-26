@@ -210,7 +210,7 @@ export default function OrderDetails(props) {
                             <Divider variant='middle' />
                         </Grid>
                         <Grid item xs={12}>
-                            <InfoCard title='تاریخ ثبت سفارش' data={order.CreatedOn || 'نامشخص'}
+                            <InfoCard title='تاریخ ثبت سفارش' data={order.CreatedOnPersian || 'نامشخص'}
                                 icon={<EventIcon style={{ color: colors.primaryLight }} />} />
                             <Divider variant='middle' />
                         </Grid>
@@ -225,7 +225,7 @@ export default function OrderDetails(props) {
                             <Divider variant='middle' />
                         </Grid>
                         <Grid item xs={12}>
-                            <InfoCard title='وضعیت سفارش' data={order.LastStatus || 'نامشخص'}
+                            <InfoCard title='وضعیت سفارش' data={order.LastStatusText || 'نامشخص'}
                                 icon={<AssignmentRoundedIcon style={{ color: colors.primaryLight }} />} />
                             <Divider variant='middle' />
                         </Grid>
@@ -241,17 +241,22 @@ export default function OrderDetails(props) {
                         </Grid>
                         <Grid container item spacing={1} style={{ marginTop: '10px' }}>
                             <Grid item xs={12}>
-                                {order && order.LastStatus === OrderStatuses().WaitingToBeAcceptedByDrugStore &&
+                                {order && order.LastStatusText === OrderStatuses().WaitingToBeAcceptedByDrugStore &&
                                     <Button fullWidth
                                         className={netDrugStyles.gradientButtonPrimary}
                                         onClick={confirmOrder}
                                     >قبول کردن سفارش</Button>}
-                                {order && order.LastStatus === OrderStatuses().Confirmed &&
+                                {order && order.LastStatusText === OrderStatuses().Confirmed &&
                                     <Button fullWidth
                                         className={netDrugStyles.gradientButtonPrimary}
                                         component={Link} to={`/orders/${order.Id}/prepare`}
                                     >شروع آماده سازی سفارش</Button>}
-                                {order && order.LastStatus === OrderStatuses().ReadyToDelivery &&
+                                {order && order.LastStatusText === OrderStatuses().ChangesNeededByDrugStore &&
+                                    <Button fullWidth
+                                        className={netDrugStyles.gradientButtonPrimary}
+                                        component={Link} to={`/orders/${order.Id}/prepare`}
+                                    >اصلاح سفارش</Button>}
+                                {order && order.LastStatusText === OrderStatuses().ReadyToDelivery &&
                                     <Button fullWidth
                                         className={netDrugStyles.gradientButtonPrimary}
                                         component={Link} to={`/orders/${order.Id}/ship`}
@@ -260,8 +265,8 @@ export default function OrderDetails(props) {
                             </Grid>
                             <Grid item xs={12}>
 
-                                {order && (order.LastStatus === OrderStatuses().Confirmed ||
-                                    order.LastStatus === OrderStatuses().ReadyToDelivery) &&
+                                {order && (order.LastStatusText === OrderStatuses().Confirmed ||
+                                    order.LastStatusText === OrderStatuses().ReadyToDelivery) &&
                                     <Button fullWidth
                                         className={netDrugStyles.gradientButtonSecondaryOutlined}
                                         onClick={cancelOrder}

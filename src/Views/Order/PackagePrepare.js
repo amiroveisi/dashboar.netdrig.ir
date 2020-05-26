@@ -59,16 +59,15 @@ export default function PackagePrepare(props) {
     const [canClearSearch, setCanclearSearch] = useState(false);
     const [order, setOrder] = useState(null);
     const { enqueueSnackbar } = useSnackbar();
-    const [orderConfirmed, setOrderConfirmed] = useState(false);
     const [unauthorized, setUnauthorized] = useState(false);
     const [numberDialogOpen, setNumberDialogOpen] = useState(false);
     const [currentDrugCount, setCurrentDrugCount] = useState(1);
     const [currentDrugPrice, setCurrentDrugPrice] = useState(0);
     const [currentDrugGenericCode, setCurrentDrugGenericCode] = useState('');
+    const [currentDrugCode, setCurrentDrugCode] = useState('');
     const [currentDrugInsuranceShare, setCurrentDrugInsuranceShare] = useState(0);
     const [currentDrugPatientShare, setCurrentDrugPatientShare] = useState(0);
     const [currentDrugDifferenceValue, setCurrentDrugDifferenceValue] = useState(0);
-    const pagedTableRef = useRef();
     const [tempSelectedItems, setTempSelectedItems] = useState([]);
     const [currentSelectedItem, setCurrentSelectedItem] = useState({});
     const [cancelDrugSelection, setCancelDrugSelection] = useState(false);
@@ -158,7 +157,9 @@ export default function PackagePrepare(props) {
                     if (serverData && serverData.Data && serverData.Code === '0') {
                         setOrder(serverData.Data);
                         if (serverData.Data.OrderItems) {
+                            console.log("PackagePrepare -> serverData.Data.OrderItems", serverData.Data.OrderItems)
                             setImageHeight(document.getElementById('infoCard').clientHeight);
+                            
                             setAddedDrugs(serverData.Data.OrderItems.map(orderItem => ({
                                 Drug: {
                                     GenericNameFarsi: orderItem.Name,
@@ -170,7 +171,12 @@ export default function PackagePrepare(props) {
                                     Id: orderItem.CommercialInfoId
                                 },
                                 Price: orderItem.Price,
-                                Quantity: orderItem.Quantity
+                                Quantity: orderItem.Quantity,
+                                InsuranceShare: orderItem.InsuranceShare,
+                                PatientShare: orderItem.PatientShare,
+                                GenericCode: orderItem.GenericCode,
+                                DifferenceValue: orderItem.DifferenceValue,
+                                Code: orderItem.Code
                             })));
                             setCancelDrugSelection(true);
                         }
@@ -208,9 +214,10 @@ export default function PackagePrepare(props) {
                         Producer: drug.Info.Producer,
                         CommercialInfoId: drug.Info.Id,
                         DrugId: drug.Drug.Id,
-                        InsuranceShare: drug.InuranceShare,
+                        InsuranceShare: drug.InsuranceShare,
                         PatientShare: drug.PatientShare,
                         GenericCode: drug.GenericCode,
+                        Code: drug.Code,
                         DifferenceValue: drug.DifferenceValue
                     })))
                 });
@@ -262,10 +269,12 @@ export default function PackagePrepare(props) {
         let tempCurrentItem = currentSelectedItem;
         tempCurrentItem.Quantity = currentDrugCount;
         tempCurrentItem.Price = currentDrugPrice;
-        tempCurrentItem.InuranceShare = currentDrugInsuranceShare;
+        tempCurrentItem.InsuranceShare = currentDrugInsuranceShare;
         tempCurrentItem.PatientShare = currentDrugPatientShare;
         tempCurrentItem.DifferenceValue = currentDrugDifferenceValue;
         tempCurrentItem.GenericCode = currentDrugGenericCode;
+        tempCurrentItem.Code = currentDrugCode;
+        console.log("handleNumberdialogConfirmation -> tempCurrentItem", tempCurrentItem)
         setCurrentSelectedItem(tempCurrentItem);
         //get all added drugs except the one that is being editet (if there was any)
         let filteredItems = addedDrugs.filter(item => item.Drug.Id !== currentSelectedItem.Drug.Id
@@ -323,7 +332,7 @@ export default function PackagePrepare(props) {
                         </Grid>
                     </Grid>
                     <Grid item>
-                        <Typography variant='caption'>{order.CreatedOn || 'نامشخص'}</Typography>
+                        <Typography variant='caption'>{order.CreatedOnPersian || 'نامشخص'}</Typography>
                     </Grid>
                 </Grid>
                 <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
@@ -352,7 +361,7 @@ export default function PackagePrepare(props) {
             </CardActions>
         </Card>
     );
-
+        console.log('added drugs: ' , addedDrugs);
     return (
 
         <div className={classes.root}>
@@ -441,7 +450,7 @@ export default function PackagePrepare(props) {
                                             </Grid>
                                         </Grid>
                                         <Grid item>
-                                            <Typography variant='caption'>{order.LastStatus || 'نامشخص'}</Typography>
+                                            <Typography variant='caption'>{order.LastStatusText || 'نامشخص'}</Typography>
                                         </Grid>
                                     </Grid>
                                     <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
@@ -570,15 +579,19 @@ export default function PackagePrepare(props) {
                                                     </li>
                                                     <li>
                                                         <Typography variant='caption'>
-                                                            {`سهم بیمه: ${item.InuranceShare || 'نامشخص'}`}
+                                                            {`سهم بیمه: ${item.InsuranceShare || 'نامشخص'}`}
                                                         </Typography>
                                                     </li>
                                                     <li>
                                                         <Typography variant='caption'>
-                                                            {`سهم سازمان: ${item.PatientShare || 'نامشخص'}`}
+                                                            {`سهم بیمار: ${item.PatientShare || 'نامشخص'}`}
                                                         </Typography>
                                                     </li>
-
+                                                    <li>
+                                                        <Typography variant='caption'>
+                                                            {`اختلاف قیمت دارو با قیمت پایه: ${item.DifferenceValue || 'نامشخص'}`}
+                                                        </Typography>
+                                                    </li>
 
                                                 </ul>
                                             )}
@@ -586,7 +599,6 @@ export default function PackagePrepare(props) {
                                                 {
                                                     label: 'حذف از لیست',
                                                     icon: <CloseIcon />,
-                                                    //customClass:netDrugStyles.secondaryFlat,
                                                     onClick: item => {
                                                         let itemIndex = addedDrugs.indexOf(addedDrugs.filter(drug => drug.Drug.Id === item.Drug.Id
                                                             && drug.Info.Id === item.Info.Id)[0]);
@@ -602,17 +614,16 @@ export default function PackagePrepare(props) {
                                                 {
                                                     label: 'ویرایش',
                                                     icon: < EditIcon />,
-                                                    //customClass:netDrugStyles.secondaryFlat,
                                                     onClick: item => {
                                                         let itemIndex = addedDrugs.indexOf(addedDrugs.filter(drug => drug.Drug.Id === item.Drug.Id
                                                             && drug.Info.Id === item.Info.Id)[0]);
-                                                        let newAddedDrugs = [];
                                                         if (itemIndex !== -1) {
                                                             setCurrentSelectedItem(item);
                                                             setCurrentDrugCount(item.Quantity);
                                                             setCurrentDrugPrice(item.Price);
                                                             setCurrentDrugDifferenceValue(item.DifferenceValue);
                                                             setCurrentDrugGenericCode(item.GenericCode);
+                                                            setCurrentDrugCode(item.Code);
                                                             setCurrentDrugInsuranceShare(item.InsuranceShare);
                                                             setCurrentDrugPatientShare(item.PatientShare);
                                                             setNumberDialogOpen(true);
@@ -678,11 +689,12 @@ export default function PackagePrepare(props) {
                                                     setCurrentSelectedItem(row);
                                                     setTempSelectedItems(copyOfAddedItems);
                                                     setCurrentDrugCount(1);
-                                                    setCurrentDrugPrice(0);
-                                                    setCurrentDrugDifferenceValue(0);
-                                                    setCurrentDrugGenericCode('');
-                                                    setCurrentDrugInsuranceShare(0);
-                                                    setCurrentDrugPatientShare(0);
+                                                    setCurrentDrugPrice(row.PriceSettings ? row.PriceSettings.Price : 0);
+                                                    setCurrentDrugDifferenceValue(row.PriceSettings ? row.PriceSettings.DifferenceValue : 0);
+                                                    setCurrentDrugGenericCode(row.PriceSettings ? row.PriceSettings.GenericCode : 0);
+                                                    setCurrentDrugCode(row.PriceSettings ? row.PriceSettings.Code : 0);
+                                                    setCurrentDrugInsuranceShare(row.PriceSettings ? row.PriceSettings.InsuranceShare : 0);
+                                                    setCurrentDrugPatientShare(row.PriceSettings ? row.PriceSettings.PatientShare : 0);
                                                     setNumberDialogOpen(true);
                                                 }
                                                 else {
@@ -855,7 +867,7 @@ export default function PackagePrepare(props) {
                                 <FormControl fullWidth>
                                     <TextField
                                         id="DifferenceValue"
-                                        label="اختلاف قیمت دارو با قیمت پایه ای"
+                                        label="اختلاف قیمت با قیمت پایه"
                                         type="text"
                                         value={currentDrugDifferenceValue}
                                         onChange={(event) => {
@@ -874,29 +886,7 @@ export default function PackagePrepare(props) {
                                     />
                                 </FormControl>
                             </Grid>
-                            <Grid item>
-                                <FormControl fullWidth>
-                                    <TextField
-                                        id="differenceValue"
-                                        label="اضافه مبلغ"
-                                        type="text"
-                                        value={currentDrugDifferenceValue}
-                                        onChange={(event) => {
-                                            if (event.target.value && !isNaN(event.target.value))
-                                                setCurrentDrugDifferenceValue(event.target.value)
-
-                                        }}
-                                        onFocus={event => event.target.select()}
-                                        onKeyPress={(event) => {
-                                            // console.log('key: ', event.charCode);
-                                            if (event.charCode === ConstantValues.EnterKey) //enter
-                                                handleNumberdialogConfirmation();
-                                            else if (event.charCode === ConstantValues.EscapeKey) //escape
-                                                handleNumberDialogClose();
-                                        }}
-                                    />
-                                </FormControl>
-                            </Grid>
+                          
                             <Grid item>
                                 <FormControl fullWidth>
                                     <TextField
@@ -907,6 +897,29 @@ export default function PackagePrepare(props) {
                                         onChange={(event) => {
                                             if (event.target.value && !isNaN(event.target.value))
                                                 setCurrentDrugGenericCode(event.target.value)
+
+                                        }}
+                                        onFocus={event => event.target.select()}
+                                        onKeyPress={(event) => {
+                                            // console.log('key: ', event.charCode);
+                                            if (event.charCode === ConstantValues.EnterKey) //enter
+                                                handleNumberdialogConfirmation();
+                                            else if (event.charCode === ConstantValues.EscapeKey) //escape
+                                                handleNumberDialogClose();
+                                        }}
+                                    />
+                                </FormControl>
+                            </Grid>
+                            <Grid item>
+                                <FormControl fullWidth>
+                                    <TextField
+                                        id="code"
+                                        label="کد اختصاصی"
+                                        type="text"
+                                        value={currentDrugCode}
+                                        onChange={(event) => {
+                                            if (event.target.value && !isNaN(event.target.value))
+                                                setCurrentDrugCode(event.target.value)
 
                                         }}
                                         onFocus={event => event.target.select()}

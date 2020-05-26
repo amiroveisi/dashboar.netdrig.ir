@@ -2,6 +2,7 @@ export default function OrderStatuses(){
     return {
         Confirmed : 'تایید شده توسط داروخانه',
         WaitingToBeAcceptedByDrugStore : 'در انتطار تایید توسط داروخانه',
-        ReadyToDelivery : 'آماده ارسال به مشتری'
+        ReadyToDelivery : 'آماده ارسال به مشتری',
+        ChangesNeededByDrugStore : 'نیاز به اصلاح توسط داروخانه'
     }
 } 

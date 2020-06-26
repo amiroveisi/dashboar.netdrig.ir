@@ -45,7 +45,7 @@ export default function EditDrugStore(props) {
     }, []);
     const submitNewDrugStore = async function () {
         try {
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/drugstore`,
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/drugstore`,
                 {
                     method: "PUT",
                     headers: {
@@ -100,7 +100,7 @@ export default function EditDrugStore(props) {
                 setLoadError('not found');
                 return;
             }
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/drugstore/${drugStoreId}`,
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/drugstore/${drugStoreId}`,
                 {
                     method: "GET",
                     headers: {

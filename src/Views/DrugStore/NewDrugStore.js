@@ -49,7 +49,7 @@ export default function NewDrugStore() {
     }, []);
     const submitNewDrugStore = async function () {
         try {
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/drugstore`,
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/drugstore`,
                 {
                     method: "POST",
                     headers: {
@@ -98,7 +98,7 @@ export default function NewDrugStore() {
     }
     const loadUsers = async function (cancellationToken) {
         try {
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/account`,
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/account`,
                 {
                     method: "GET",
                     headers: {

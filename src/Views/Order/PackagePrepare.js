@@ -88,8 +88,9 @@ export default function PackagePrepare(props) {
     }, []);
     const loadDrugs = async function (page, rowsInPage) {
         try {
-
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/crawler/drug/getpaged?pagenumber=${page}&rowsinpage=${rowsInPage}&query=${searchQuery}&drugstoreid=${drugStoreHelper.getDrugStoreId()}`,
+            let normalizedQuery = searchQuery ? searchQuery.trim() : '';
+            
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/crawler/drug/getpaged?pagenumber=${page}&rowsinpage=${rowsInPage}&query=${normalizedQuery}&drugstoreid=${drugStoreHelper.getDrugStoreId()}`,
                 {
                     method: "GET",
                     headers: {
@@ -135,7 +136,7 @@ export default function PackagePrepare(props) {
     const loadOrder = async function (orderId, cancellationToken) {
         try {
 
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/orders/${orderId}`,
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/orders/${orderId}`,
                 {
                     method: "GET",
                     headers: {
@@ -199,7 +200,7 @@ export default function PackagePrepare(props) {
     }
     const finishPacking = async function () {
         try {
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/orders/${order.Id}/package`,
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/orders/${order.Id}/package`,
                 {
                     method: "POST",
                     headers: {
@@ -255,7 +256,7 @@ export default function PackagePrepare(props) {
     const search = () => {
         setSearchClicked(true);
         if (canClearSearch) {
-            setSearchQuery(' ');
+            setSearchQuery(null);
         }
         setCanclearSearch(!canClearSearch);
     }
@@ -278,7 +279,7 @@ export default function PackagePrepare(props) {
         setCurrentSelectedItem(tempCurrentItem);
         //get all added drugs except the one that is being editet (if there was any)
         let filteredItems = addedDrugs.filter(item => item.Drug.Id !== currentSelectedItem.Drug.Id
-            || (item.Drug.Id === currentSelectedItem.Drug.Id && item.Info.Id !== currentSelectedItem.Info.Id));
+            || (item.Drug.Id === currentSelectedItem.Drug.Id && (!item.Info || item.Info && currentSelectedItem.Info && item.Info.Id !== currentSelectedItem.Info.Id)));
         //if drug is being edited
         if (filteredItems.length < addedDrugs.length) {
             filteredItems = filteredItems.concat(tempCurrentItem);
@@ -558,7 +559,7 @@ export default function PackagePrepare(props) {
                                                     </Typography></li>
                                                     <li>
                                                         <Typography variant='caption'>
-                                                            {`تولید کننده: ${item.Info.Producer}`}
+                                                            {`تولید کننده: ${item.Info ? item.Info.Producer : ''}`}
                                                         </Typography>
                                                     </li>
                                                     <li>
@@ -601,7 +602,7 @@ export default function PackagePrepare(props) {
                                                     icon: <CloseIcon />,
                                                     onClick: item => {
                                                         let itemIndex = addedDrugs.indexOf(addedDrugs.filter(drug => drug.Drug.Id === item.Drug.Id
-                                                            && drug.Info.Id === item.Info.Id)[0]);
+                                                            && (!drug.Info || (drug.Info && item.Info && drug.Info.Id === item.Info.Id)))[0]);
                                                         let newAddedDrugs = [];
                                                         if (itemIndex !== -1) {
                                                             newAddedDrugs = newAddedDrugs.concat(addedDrugs.slice(0, itemIndex));
@@ -616,7 +617,7 @@ export default function PackagePrepare(props) {
                                                     icon: < EditIcon />,
                                                     onClick: item => {
                                                         let itemIndex = addedDrugs.indexOf(addedDrugs.filter(drug => drug.Drug.Id === item.Drug.Id
-                                                            && drug.Info.Id === item.Info.Id)[0]);
+                                                            && (!drug.Info || (drug.Info && item.Info && drug.Info.Id === item.Info.Id)))[0]);
                                                         if (itemIndex !== -1) {
                                                             setCurrentSelectedItem(item);
                                                             setCurrentDrugCount(item.Quantity);
@@ -675,7 +676,7 @@ export default function PackagePrepare(props) {
                                 order.Drug ? `${order.Drug.Id}-${order.Info && order.Info.Id}`
                                     : `${order.DrugId}-${order.CommercialInfoId}`}
                             selectable={false}
-                            rowsPerPageOptions={[4, 25, 50, 100]}
+                            rowsPerPageOptions={[25, 50, 100]}
                             headers={[
                                 {
                                     title: 'عملیات',
@@ -714,7 +715,7 @@ export default function PackagePrepare(props) {
                                 },
                                 {
                                     title: 'نام فارسی',
-                                    value: (order) => order.Drug.GenericNameFarsi,
+                                    value: (order) => order.Drug.DrugStoreId && !order.Drug.IsConfirmed ? order.Drug.GenericNameFarsi + ' (اختصاصی)' : order.Drug.GenericNameFarsi,
                                     style: {
                                         'background': '#A1DFFB88'
                                     }
@@ -728,7 +729,7 @@ export default function PackagePrepare(props) {
                                 },
                                 {
                                     title: 'تولید کننده',
-                                    value: (order) => order.Info.Producer,
+                                    value: (order) => order.Info && order.Info.Producer,
                                     style: {
                                         'background': '#A1DFFB88'
                                     }
@@ -750,7 +751,7 @@ export default function PackagePrepare(props) {
                             ]}
                             pageLoader={loadDrugs}
                             query={searchClicked ? searchQuery : ''}
-                            maxHeight='380px'
+                            //maxHeight='380px'
                             initialSelectedItems={cancelDrugSelection ? addedDrugs : null}
                             initialSelectedItemsCallback={() => setCancelDrugSelection(false)}
                         ></PagedTable>

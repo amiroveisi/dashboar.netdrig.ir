@@ -6,7 +6,7 @@ const LOADING = 1;
 const LOADED = 2;
 let itemStatusMap = {};
 let cachedItems = {};
-const url = 'http://www.netdrug.ir/api/crawler/drug/getpaged?pagenumber=1&rowsinpage=50';
+const url = 'http://api.netdrug.ir/crawler/drug/getpaged?pagenumber=1&rowsinpage=50';
 const isItemLoaded = index => itemStatusMap[index];
 
 
@@ -51,7 +51,7 @@ export default function VirtualizedListTest(props) {
         console.log('start index: ', startIndex);
         console.log('end index: ', stopIndex);
         console.log('page: ', page);
-        fetch(`http://www.netdrug.ir/api/crawler/drug/getpaged?pagenumber=${page}&rowsinpage=50`,{
+        fetch(`http://api.netdrug.ir/crawler/drug/getpaged?pagenumber=${page}&rowsinpage=50`,{
           method : 'GET',
           headers:{
             'Content-Type': 'application/json',

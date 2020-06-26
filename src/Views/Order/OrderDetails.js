@@ -60,7 +60,7 @@ export default function OrderDetails(props) {
     const loadOrder = async function (orderId, cancellationToken) {
         try {
 
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/orders/${orderId}`,
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/orders/${orderId}`,
                 {
                     method: "GET",
                     headers: {
@@ -101,7 +101,7 @@ export default function OrderDetails(props) {
     const confirmOrder = async function () {
         try {
             let orderId = order.Id;
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/orders/${orderId}/confirm`,
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/orders/${orderId}/confirm`,
                 {
                     method: "POST",
                     headers: {
@@ -145,7 +145,7 @@ export default function OrderDetails(props) {
     const cancelOrder = async function () {
         try {
             let orderId = order.Id;
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/orders/${orderId}/cancel`,
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/orders/${orderId}/cancel`,
                 {
                     method: "POST",
                     headers: {

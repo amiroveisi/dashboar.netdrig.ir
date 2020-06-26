@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import './Assets/Css/netdrug.css';
-import { BrowserRouter, Route, Switch, Link as RouterLink, Redirect } from 'react-router-dom';
+import { BrowserRouter, Route, Switch, Link as RouterLink, Redirect, Router } from 'react-router-dom';
 import Login from './Views/Login.js';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
 import { RTL } from './Components/RTL.js';
@@ -21,7 +21,14 @@ import PackagePrepare from './Views/Order/PackagePrepare';
 import OrdersWaitingCustomerConfirmation from './Views/Order/OrdersWaitingCustomerConfirmation';
 import GradientBtn from './Components/GradientButton/GradientButton';
 import OrdersReadyToDelivery from './Views/Order/OrdersReadyToDelivery';
-
+import CustomDrugsIndex from './Views/CustomDrug/CustomDrugsIndex';
+import CustomDrugDetails from './Views/CustomDrug/CustomDrugDetails';
+import CustomDrugEdit from './Views/CustomDrug/CustomDrugEdit';
+import { responseHandler } from './Helpers/ResponseHandler';
+import { history } from './Helpers/History';
+import CustomDrugNew from './Views/CustomDrug/CustomDrugNew';
+import { authenticationService } from './Services/AuthenticationService';
+import { connectableObservableDescriptor } from 'rxjs/internal/observable/ConnectableObservable';
 
 const theme = createMuiTheme({
   direction: 'rtl',
@@ -40,6 +47,19 @@ const useStyles = makeStyles(theme => ({
 
 function App() {
   const classes = useStyles();
+  useEffect(() => {
+    responseHandler.userNotAuthorized.subscribe(notAuthorized => {
+      if (notAuthorized) {
+        setIsNotAuthorized(true);
+      }
+    });
+   
+  }, []);
+  const [isNotAuthorized, setIsNotAuthorized] = useState(false);
+  if (isNotAuthorized) {
+    
+    history.push('/login');
+  }
   return (
     <RTL>
       <ThemeProvider theme={theme}>
@@ -50,10 +70,12 @@ function App() {
           }}>
           <div className="App">
             <body>
-              <BrowserRouter>
-                <TopMenu />
+              <Router history={history} >
+                <TopMenu userRoles={authenticationService.currentUserValue && authenticationService.currentUserValue.roles} />
                 <Switch>
-                  <Route path='/test' component={GradientBtn} />
+                  <Route path='/customdrug/new' component={CustomDrugNew} />
+                  <Route path='/customdrug/:customDrugId/details' component={CustomDrugDetails} />
+                  <Route path='/customdrug/:customDrugId/edit' component={CustomDrugEdit} />
                   <Route path='/orders/waitingforcustomer' component={OrdersWaitingCustomerConfirmation} />
                   <Route path='/orders/readytodelivery' component={OrdersReadyToDelivery} />
                   <Route path='/orders/:orderId/prepare' component={PackagePrepare} />
@@ -64,12 +86,13 @@ function App() {
                   <Route path='/drugstore/all' component={DrugStoresIndex} />
                   <Route path='/drugstore/new' component={NewDrugStore} />
                   <Route path='/drugstore/edit/:drugStoreId' component={EditDrugStore} />
+                  <Route path='/customdrug/all' component={CustomDrugsIndex} />
 
                   <Route path='/' component={Dashboard} />
 
 
                 </Switch>
-              </BrowserRouter>
+              </Router>
             </body>
           </div>
         </SnackbarProvider>

@@ -23,7 +23,7 @@ export async function GetUserInfo(cancellationToken) {
         return Promise.resolve(sessionStorage.getItem('currentUserInfo'));
     let result = null;
     try {
-        const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/account/userinfo`,
+        const response = await fetch(`${ConstantValues.WebApiBaseUrl}/account/userinfo`,
             {
                 method: "GET",
                 headers: {

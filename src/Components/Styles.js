@@ -23,7 +23,6 @@ const useStyles = makeStyles(themes => ({
     borderRadius: 100,
     paddingLeft: 24,
     paddingRight: 24,
-   
     color: '#ffffff'
   },
   gradientCircleButtonPrimary: {
@@ -52,7 +51,20 @@ const useStyles = makeStyles(themes => ({
     paddingRight: 24,
     color: '#42a5f5'
   },
-  
+  gradientButtonPrimary2: {
+    background: 'linear-gradient(to right, #42a5f5bb, #42a5f588)',
+    '&:hover': {
+      background: 'linear-gradient(to right, #42a5f5aa, #42a5f577)'
+    },
+    border: '1px solid #42a5f522',
+    boxShadow: '0px 4px 32px #42a5f555',
+    borderRadius: 100,
+
+    paddingLeft: 24,
+    paddingRight: 24,
+    fontFamily: 'IranSans',
+    color: '#ffffff'
+  },
   gradientButtonPrimaryFlat: {
     background: 'ffffffff',
     '&:hover': {

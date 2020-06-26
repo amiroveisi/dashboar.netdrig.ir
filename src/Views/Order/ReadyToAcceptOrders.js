@@ -43,7 +43,7 @@ export default function ReadytoAcceptOrders() {
     const loadOrders = async function (cancellationToken) {
         try {
 
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/orders/readyToAccept`,
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/orders/readyToAccept`,
                 {
                     method: "GET",
                     headers: {

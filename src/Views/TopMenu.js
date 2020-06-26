@@ -8,8 +8,8 @@ import { Link as RouterLink } from 'react-router-dom';
 import * as AuthHelper from '../Helpers/AuthHelper';
 import { Grid } from '@material-ui/core';
 import AccountCircleRoundedIcon from '@material-ui/icons/AccountCircleRounded';
-
-
+import { roles } from '../Helpers/Role';
+import { authenticationService } from '../Services/AuthenticationService';
 const useStyles = makeStyles(theme => ({
     root: {
         flexGrow: 1,
@@ -26,29 +26,32 @@ const Link = React.forwardRef((props, ref) => (
     <RouterLink innerRef={ref} {...props} />
 ));
 
-export default function TopMenu() {
+export default function TopMenu(props) {
+    const { userRoles } = props;
     const classes = useStyles();
     const [userInfo, setUserInfo] = useState(null);
     const handleLoginButtonClick = () => {
         if (AuthHelper.IsLoggedIn()) {
             AuthHelper.LogOff();
+            authenticationService.logout();
             document.location.href = '/';
         }
         else {
             document.location.href = '/login';
         }
+
     }
     useEffect(() => {
         const abortController = new AbortController();
         const abortSignal = abortController.signal;
 
         AuthHelper.GetUserInfo(abortSignal).then(result => {
-           
+
             setUserInfo(result);
         });
         //useEffect's cleanup
         return () => { abortController.abort() };
-    },[])
+    }, [])
     return (
         <AppBar position="static">
             <Toolbar>
@@ -60,10 +63,12 @@ export default function TopMenu() {
                 <Button className={classes.menuButton} color="inherit" component={Link} to="/">
                     صفحه اصلی
                 </Button>
-                <Button className={classes.menuButton} color="inherit" component={Link} to="/drugstore/all">
+                {authenticationService.isInRole(roles.admin) && <Button className={classes.menuButton} color="inherit" component={Link} to="/drugstore/all">
                     مدیریت داروخانه ها
-                </Button>
-
+                </Button>}
+                {authenticationService.isInRole(roles.drugStoreOwner) && <Button className={classes.menuButton} color="inherit" component={Link} to="/customdrug/all">
+                    مدیریت داروهای اختصاصی
+                </Button>}
                 <Button className={classes.menuButton} color="inherit" component={Link} to={AuthHelper.IsLoggedIn() ? '/' : '/login'}
                     onClick={() => {
                         handleLoginButtonClick();

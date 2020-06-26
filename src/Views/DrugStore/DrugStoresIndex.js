@@ -43,7 +43,7 @@ export default function DrugStoresIndex() {
 
     const loadDrugStores = async function (cancellationToken) {
         try {
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/drugstore`,
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/drugstore`,
                 {
                     method: "GET",
                     headers: {

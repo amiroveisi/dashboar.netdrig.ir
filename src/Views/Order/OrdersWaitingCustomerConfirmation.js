@@ -45,7 +45,7 @@ export default function OrdersWaitingCustomerConfirmation() {
     const loadOrders = async function (cancellationToken) {
         try {
 
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/orders/waitingforcustomer`,
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/orders/waitingforcustomer`,
                 {
                     method: "GET",
                     headers: {

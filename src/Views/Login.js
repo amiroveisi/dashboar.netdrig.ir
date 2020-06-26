@@ -14,6 +14,7 @@ import { useSnackbar } from 'notistack';
 import * as AuthHelper from '../Helpers/AuthHelper';
 import useNetDrugStyles from '../Components/Styles';
 import * as drugStoreHelper from '../Helpers/DrugStoreHelper';
+import { authenticationService } from '../Services/AuthenticationService';
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -47,12 +48,13 @@ export default function Login() {
     const netDrugStyles = useNetDrugStyles();
     const getUserDrugStore = async function () {
         try {
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/api/drugstore/userdrugstore`,
+            
+            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/drugstore/userdrugstore`,
                 {
                     method: "GET",
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${AuthHelper.GetAuthToken()}`
+                        'Authorization': `Bearer ${authenticationService.currentUserValue.token}`
                     }
                 });
             if (!response) {
@@ -86,22 +88,15 @@ export default function Login() {
     const login = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch(`${ConstantValues.WebApiBaseUrl}/oauth2/token`,
-                {
-                    method: "POST",
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: 'Username=' + username + '&Password=' + password + '&grant_type=password'
-
-                });
+            const response = await authenticationService.login(username, password);
+           
             if (!response) {
                 setIsLoading(false);
                 enqueueSnackbar(`خطایی رخ داده است. ${response.status} ${response.statusText}`, { variant: 'error' });
             }
             else {
                 try {
-                    const data = await response.json();
+                    const data = response;//.json();
                     if (data && data.access_token) {
                         AuthHelper.LoggedIn(data.access_token);
                         setIsLoading(false);

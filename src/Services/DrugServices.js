@@ -7,7 +7,29 @@ export const drugService = {
     newCustomDrug,
     getCustomDrugs,
     getCustomDrugById,
-    confirmCustomDrug
+    confirmCustomDrug,
+    toggleHideDrug: toggleHideDrug,
+    getDrugs
+}
+function getDrugs(page, rowsInPage, query, drugStoreId) {
+    const requestOptions = {
+        method: 'GET',
+        headers: authHeader()
+    }
+    return fetch(`${ConstantValues.WebApiBaseUrl}/crawler/drug/getpaged?query=${query}&pagenumber=${page}&rowsinpage=${rowsInPage}&drugstoreid=${drugStoreId}`, requestOptions)
+        .then(responseHandler.handleResponse)
+        .then(drugs => { return drugs });
+}
+
+function toggleHideDrug(drugId, drugStoreId){
+    let headers = authHeader();
+    const requestOptions = {
+        method: 'POST',
+        headers: headers
+    };
+    return fetch(`${ConstantValues.WebApiBaseUrl}/crawler/drug/togglehide?id=${drugId}&drugStoreId=${drugStoreId}`, requestOptions)
+        .then(responseHandler.handleResponse)
+        .then(drug => { return drug; });
 }
 
 function newCustomDrug(drug) {

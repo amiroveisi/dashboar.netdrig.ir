@@ -29,6 +29,7 @@ import { history } from './Helpers/History';
 import CustomDrugNew from './Views/CustomDrug/CustomDrugNew';
 import { authenticationService } from './Services/AuthenticationService';
 import { connectableObservableDescriptor } from 'rxjs/internal/observable/ConnectableObservable';
+import DrugManagement from './Views/Drug/DrugManagement';
 
 const theme = createMuiTheme({
   direction: 'rtl',
@@ -73,6 +74,7 @@ function App() {
               <Router history={history} >
                 <TopMenu userRoles={authenticationService.currentUserValue && authenticationService.currentUserValue.roles} />
                 <Switch>
+                  <Route path='/drug/manage' component={DrugManagement} />
                   <Route path='/customdrug/new' component={CustomDrugNew} />
                   <Route path='/customdrug/:customDrugId/details' component={CustomDrugDetails} />
                   <Route path='/customdrug/:customDrugId/edit' component={CustomDrugEdit} />

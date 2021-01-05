@@ -112,7 +112,8 @@ export default function PackagePrepare(props) {
                     const serverData = await response.json();
                     setSearchClicked(false);
                     if (serverData && serverData.Data && serverData.Code === '0') {
-                        return Promise.resolve({ data: serverData.Data.CurrentPageData, totalCount: serverData.Data.TotalRows });
+                        return Promise.resolve({ data: Array.from(serverData.Data.CurrentPageData)
+                            .filter(item => !item.PriceSettings || (item.PriceSettings && item.PriceSettings.IsHidden === false)), totalCount: serverData.Data.TotalRows });
                     }
                     else {
                         enqueueSnackbar("خطا در دریافت اطلاعات داروخانه. لطفا صفحه را مجددا بارگذاری نمایید", { variant: 'warning' });

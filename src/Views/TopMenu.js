@@ -69,6 +69,9 @@ export default function TopMenu(props) {
                 {authenticationService.isInRole(roles.drugStoreOwner) && <Button className={classes.menuButton} color="inherit" component={Link} to="/customdrug/all">
                     مدیریت داروهای اختصاصی
                 </Button>}
+                {(authenticationService.isInRole(roles.admin) || authenticationService.isInRole(roles.drugStoreOwner)) && <Button className={classes.menuButton} color="inherit" component={Link} to="/drug/manage">
+                    مدیریت داروها
+                </Button>}
                 <Button className={classes.menuButton} color="inherit" component={Link} to={AuthHelper.IsLoggedIn() ? '/' : '/login'}
                     onClick={() => {
                         handleLoginButtonClick();
